@@ -1,0 +1,8 @@
+{
+  "name": "yeoboya-workflow",
+  "description": "여보야 솔루션개발부 /dev 개발 파이프라인 플러그인 — 5개 서비스(달라, 클럽라이브, 여보야, 클럽5678, AI식단)의 iOS/Android 개발 워크플로우 자동화",
+  "version": "0.1.0",
+  "author": {
+    "name": "윤병은"
+  }
+}

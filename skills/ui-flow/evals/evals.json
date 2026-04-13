@@ -1,0 +1,17 @@
+{
+  "skill_name": "ui-flow",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "달라 쿠킹클래스 기획서로 UI 흐름도를 만들어줘. PDF: /Users/yun/Desktop/26.05_달라_쿠킹클래스ver0.2.pdf",
+      "expected_output": "화면 목록 추출, Mermaid stateDiagram-v2, 화면별 상태 정의 테이블, Notion 서브페이지 구조(논의사항/수정사항 빈 섹션 포함)",
+      "files": ["/Users/yun/Desktop/26.05_달라_쿠킹클래스ver0.2.pdf"]
+    },
+    {
+      "id": 2,
+      "prompt": "기획서 검토를 안 했는데 UI 흐름도부터 만들 수 있어?",
+      "expected_output": "기획서 검토가 먼저 완료되어야 한다는 안내",
+      "files": []
+    }
+  ]
+}

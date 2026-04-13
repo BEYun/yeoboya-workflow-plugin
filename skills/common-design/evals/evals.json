@@ -1,0 +1,17 @@
+{
+  "skill_name": "common-design",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "달라 쿠킹클래스 신규 개발 공통 설계를 만들어줘",
+      "expected_output": "6개 섹션(화면 구조, 데이터 모델, 상태 관리, API 연동, 비즈니스 로직, 엣지 케이스) 포함, /CookingClass/... API 경로",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "기존 쿠킹클래스 이벤트에서 보상 구조만 변경하려고 해",
+      "expected_output": "모드 B: 변경 배경, 기존 설계 요약, AS-IS→TO-BE 변경 사항, 영향 범위",
+      "files": []
+    }
+  ]
+}

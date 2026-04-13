@@ -1,0 +1,17 @@
+{
+  "skill_name": "data-flow",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "달라 쿠킹클래스 기획서로 데이터 흐름도를 만들어줘",
+      "expected_output": "Mermaid 시퀀스 다이어그램, 데이터 모델 테이블, /CookingClass/... 형식 API 엔드포인트 초안",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "기획서 검토를 안 했는데 데이터 흐름도부터 만들 수 있어?",
+      "expected_output": "선행조건 미충족 안내",
+      "files": []
+    }
+  ]
+}

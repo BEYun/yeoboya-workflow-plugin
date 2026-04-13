@@ -1,0 +1,17 @@
+{
+  "skill_name": "spec-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "이 기획서 검토해줘: /Users/yun/Desktop/26.05_달라_쿠킹클래스ver0.2.pdf",
+      "expected_output": "4가지 관점으로 페이지별 이슈 분석, 유형 태그 포함, Notion 저장 및 피드백 PDF 생성 제안",
+      "files": ["/Users/yun/Desktop/26.05_달라_쿠킹클래스ver0.2.pdf"]
+    },
+    {
+      "id": 2,
+      "prompt": "기획서에 이슈가 없으면 어떻게 돼?",
+      "expected_output": "검토 통과 메시지, Notion에 '검토 통과'로 기록",
+      "files": []
+    }
+  ]
+}
