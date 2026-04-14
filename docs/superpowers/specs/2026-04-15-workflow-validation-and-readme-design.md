@@ -20,13 +20,13 @@
 **포함**
 - `skills/common/validate` 신규 스킬 (단계별 산출물 구조 검증)
 - `hooks/stage-guard.sh` 신규 훅 (Notion 쓰기 PreToolUse 차단)
-- `.claude/dev-state.json` 상태 파일 포맷 정의
+- `.dev-work/<작업번호>/state.json` 작업별 상태 파일 포맷 정의
+- `.claude/active-task` 현재 `/dev`가 작업 중인 작업번호를 가리키는 포인터 파일
 - `skills/setting/dev/SKILL.md` 최소 수정 (state 기록 + validate 자동 호출)
 - `README.md`(루트, 사용자용) 신규 작성
 - `CONTRIBUTING.md`(루트, 기여자용) 신규 작성
 
 **미포함 (YAGNI)**
-- 병렬 작업번호 동시 진행
 - `/dev` 외부에서 스킬 직접 호출 시 강제 차단
 - CI에서 스킬 정합성 자동 감사(meta-validation)
 - 개발 단계(4/5/6)의 훅 기반 차단(경고만)
@@ -44,14 +44,14 @@
 ┌────────────────────────────────────────────────────────┐
 │  /dev 파이프라인                                         │
 │   ├── 단계 선택                                          │
-│   ├── dev-state.json에 activeStage / activeSkill 기록   │
+│   ├── state.json에 activeStage / activeSkill 기록        │
 │   ├── 생성 스킬 호출(spec-review, ui-flow, ...)         │
 │   └── 완료 후 skills/common/validate 자동 호출          │
 └─────────────────┬──────────────────────────────────────┘
                   │
                   ▼
-        .claude/dev-state.json
-        (작업번호 · activeStage · stages[n].produced/validated)
+        .claude/active-task  ────►  .dev-work/<작업번호>/state.json
+        (현재 작업번호 포인터)        (activeStage · stages[n].produced/validated)
                   ▲
         ┌─────────┼────────────┐
         │         │            │
@@ -62,9 +62,19 @@
 
 ## 5. 컴포넌트 명세
 
-### 5.1 `.claude/dev-state.json`
+### 5.1 상태 파일 (작업별 + active pointer)
 
-단일 파일, 단일 active task 전제.
+작업별 상태는 기존 관행(`.dev-work/<작업번호>/`)을 따라 **작업 디렉토리 안**에 둔다. 이로써 여러 작업번호를 병렬로 유지할 수 있고, 작업 디렉토리만 보면 해당 작업의 진행 상태를 파악할 수 있다.
+
+**`.claude/active-task`** — 현재 `/dev`가 작업 중인 작업번호 하나만 담은 텍스트 파일.
+
+```
+DCL-1351
+```
+
+훅은 이 파일을 먼저 읽어 활성 작업번호를 얻고, 그 작업의 상태 파일 경로를 유도한다. 파일이 없거나 비어 있으면 `/dev` 외부 상태로 간주하고 훅은 통과시킨다.
+
+**`.dev-work/<작업번호>/state.json`** — 해당 작업의 상태.
 
 ```json
 {
@@ -82,25 +92,27 @@
 ```
 
 필드:
-- `task` — 현재 작업번호 (예: `DCL-1351`)
-- `activeStage` — 진행 중인 단계 번호(숫자). 스킬+validate 완료 시 `null`로 초기화
+- `task` — 작업번호 (디렉토리 이름과 동일. 중복 기록이지만 파일 독립 검증용)
+- `activeStage` — 진행 중인 단계 번호. 스킬+validate 완료 시 `null`로 초기화
 - `activeSkill` — 진행 중인 스킬 경로. 훅이 참고 가능
 - `stages[n].produced` — 해당 단계 산출물이 Notion에 작성됨
 - `stages[n].validated` — validate 스킬이 구조 검사를 통과시킴. 재작업 시 후행 단계는 `false`로 되돌림
 - `stages[n].artifactPageId` — 산출물 Notion 페이지 ID
 - `lastUpdated` — ISO 8601 타임스탬프
 
-**주의**: `stages`는 Notion 산출물이 있는 단계(1, 2, 3, 7)만 추적한다. 개발 단계(4, 5, 6)는 기존 `/dev` 방식대로 `git log --grep='[작업번호]'`로 판단하며 `dev-state.json`에 별도 필드를 두지 않는다.
+**주의**: `stages`는 Notion 산출물이 있는 단계(1, 2, 3, 7)만 추적한다. 개발 단계(4, 5, 6)는 기존 `/dev` 방식대로 `git log --grep='[작업번호]'`로 판단하며 상태 파일에 별도 필드를 두지 않는다.
+
+**병렬 작업**: 각 작업번호는 자기 디렉토리의 `state.json`을 가지므로 동시에 여러 작업을 보존할 수 있다. `/dev`가 작업을 전환할 때는 `.claude/active-task`만 갱신하면 된다. 훅은 항상 `active-task`가 가리키는 단 하나의 작업만 감시한다.
 
 ### 5.2 `skills/common/validate/SKILL.md`
 
 **입력**: `task`, `stage` (1 | 2 | 3 | 7)
 
 **절차**
-1. `dev-state.json`에서 `stages[stage].artifactPageId` 조회
+1. `.dev-work/<task>/state.json`에서 `stages[stage].artifactPageId` 조회
 2. `skills/common/notion-writer`로 Notion 페이지 내용 로드
 3. 단계별 규칙(아래) 적용
-4. 결과를 `dev-state.json`의 `stages[stage].validated`에 기록 (통과 시 `true`)
+4. 결과를 `state.json`의 `stages[stage].validated`에 기록 (통과 시 `true`)
 5. 실패 시 어떤 규칙이 실패했는지 사용자에게 리포트하고 `false` 유지
 
 **단계별 규칙 (중앙화)**
@@ -135,7 +147,7 @@ PreToolUse 훅. Notion MCP 쓰기 도구를 가로챈다.
 
 **로직**
 1. tool_input에서 page title(또는 parent의 title) 추출
-2. `.claude/dev-state.json` 없거나 `activeStage`가 `null` → **허용** (/dev 외부 작업)
+2. `.claude/active-task`가 없거나 비어있음, 또는 `.dev-work/<task>/state.json`의 `activeStage`가 `null` → **허용** (/dev 외부 작업)
 3. title이 아래 매핑에 해당하는지 확인
    | 페이지 제목 | 기대 stage |
    |------------|-----------|
@@ -164,11 +176,11 @@ PreToolUse 훅. Notion MCP 쓰기 도구를 가로챈다.
 
 최소 3개 지점:
 
-1. **섹션 2(작업번호 입력) 후**: `dev-state.json`의 `task` 필드 갱신. 기존 task와 다르면 "현재 X 진행 중인데 Y로 전환하시겠습니까?" 확인.
+1. **섹션 2(작업번호 입력) 후**: `.claude/active-task`를 입력된 작업번호로 갱신. `.dev-work/<작업번호>/`가 없으면 생성. `state.json`이 없으면 초기 상태로 생성, 있으면 그대로 로드(작업 재개).
 2. **섹션 7(스킬 라우팅) 직전**: 선택한 단계의 `activeStage` / `activeSkill` 기록.
 3. **섹션 7(스킬 라우팅) 직후**: 생성 스킬 완료 시 `skills/common/validate`를 해당 stage로 자동 호출. 검증 통과 시 `activeStage=null`로 초기화 후 메뉴 복귀.
 
-섹션 6(재작업 플로우)의 영향 전파 규칙을 `dev-state.json`에 반영: 재작업 통과 시 후행 단계의 `validated`를 `false`로 되돌림.
+섹션 6(재작업 플로우)의 영향 전파 규칙을 해당 작업의 `state.json`에 반영: 재작업 통과 시 후행 단계의 `validated`를 `false`로 되돌림.
 
 ### 5.5 생성 스킬 상호참조 한 줄
 
@@ -183,7 +195,7 @@ PreToolUse 훅. Notion MCP 쓰기 도구를 가로챈다.
 
 **정상 플로우 (단계 2 예시)**
 1. 사용자 `/dev DCL-1351` → 메뉴에서 "2. UI 흐름도" 선택
-2. `/dev`가 `dev-state.json`에 `activeStage=2, activeSkill="skills/blueprint/ui-flow"` 기록
+2. `/dev`가 `.claude/active-task`에 `DCL-1351` 기록, `.dev-work/DCL-1351/state.json`에 `activeStage=2, activeSkill="skills/blueprint/ui-flow"` 기록
 3. `skills/blueprint/ui-flow` 실행 → Mermaid stateDiagram 생성 후 Notion "UI 흐름도" 페이지 쓰기 시도
 4. `hooks/stage-guard.sh`가 PreToolUse에서 검사: title="UI 흐름도" → stage 2, `activeStage`=2 → 일치 → 허용, `stages[2].produced=true`
 5. 쓰기 완료, ui-flow 스킬 종료
@@ -202,7 +214,7 @@ PreToolUse 훅. Notion MCP 쓰기 도구를 가로챈다.
 - **재작업**: 1 재실행 통과 → `stages[{2,3,4,5,7}].validated=false`로 되돌림(기존 영향 전파 규칙 반영).
 - **수동 편집 필요**: `DEV_GUARD_BYPASS=1`로 1회 우회.
 - **개발 단계 경고**: 차단 없음, 경고만.
-- **병렬 작업**: 미지원. 새 작업번호 입력 시 기존 state를 덮어쓰기 전 확인 프롬프트.
+- **작업 전환 / 병렬 작업**: 각 작업번호가 자기 `state.json`을 가지므로 상호 간섭 없음. 새 작업번호 입력 시 기존 작업의 state는 그대로 보존되고 `.claude/active-task`만 갱신된다. 훅은 항상 현재 active 작업 하나만 감시하므로, 다른 작업의 Notion 페이지 제목과 우연히 일치하는 쓰기는 영향받지 않는다.
 
 ## 8. 두 README 명세
 
@@ -249,8 +261,8 @@ PreToolUse 훅. Notion MCP 쓰기 도구를 가로챈다.
 
 ## FAQ / 트러블슈팅
 - Notion MCP 연결 실패
-- dev-state.json 초기화 방법
-- 작업번호 전환
+- state.json / active-task 초기화 방법
+- 작업번호 전환 (여러 작업 병렬 유지 방법)
 ```
 
 ### 8.2 `CONTRIBUTING.md` (루트, 기여자용)
@@ -270,8 +282,8 @@ PreToolUse 훅. Notion MCP 쓰기 도구를 가로챈다.
 - 스킬 간 의존성 명시
 
 ## 워크플로우 아키텍처
-- /dev → 생성 스킬 → validate → dev-state.json 라이프사이클
-- dev-state.json 스키마
+- /dev → 생성 스킬 → validate → state.json 라이프사이클
+- `.claude/active-task` 포인터와 `.dev-work/<task>/state.json` 스키마
 - 훅 PreToolUse 차단 로직
 - validate 스킬의 단계별 규칙 위치
 
@@ -284,7 +296,7 @@ PreToolUse 훅. Notion MCP 쓰기 도구를 가로챈다.
 
 ## 검증 규칙 수정 가이드
 - validate 스킬의 단계별 블록 수정
-- 기존 작업번호 dev-state.json 호환성 주의
+- 기존 작업번호 state.json 호환성 주의
 
 ## 테스트
 - 스킬 단독 실행
@@ -297,13 +309,12 @@ PreToolUse 훅. Notion MCP 쓰기 도구를 가로챈다.
 ## 9. 구현 시 주의
 
 - 훅 스크립트는 Claude Code 훅 시스템의 입력 포맷(JSON via stdin)을 사용한다. 반환은 exit code + stderr 메시지.
-- `dev-state.json` 쓰기는 원자적(atomic) — 임시 파일 생성 후 rename.
+- `state.json` / `active-task` 쓰기는 원자적(atomic) — 임시 파일 생성 후 rename.
 - 한국어 페이지 제목 매칭은 정확 일치 기본, 공백/대소문자 정규화 후 비교. 부분 매칭은 금지(false positive 위험).
 - validate 스킬은 Notion 페이지 구조를 읽을 때 마크다운 렌더링이 아닌 블록 API로 직접 탐색해야 정확도가 높다.
 
 ## 10. 향후 확장 (out of scope)
 
-- 병렬 작업번호 지원 (`dev-state.json`을 task별 파일로 분리)
 - CI에서 스킬 정합성 감사(meta-validation)
 - 개발 단계(4/5/6) 훅 기반 차단 강화
 - 검증 규칙 JSON 스키마화 및 외부화
