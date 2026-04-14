@@ -52,8 +52,8 @@ function readState(root, task) {
 }
 
 function writeState(root, task, state) {
-  state.lastUpdated = new Date().toISOString();
-  atomicWrite(statePath(root, task), JSON.stringify(state, null, 2) + '\n');
+  const toWrite = { ...state, lastUpdated: new Date().toISOString() };
+  atomicWrite(statePath(root, task), JSON.stringify(toWrite, null, 2) + '\n');
 }
 
 function newEmptyState(task) {

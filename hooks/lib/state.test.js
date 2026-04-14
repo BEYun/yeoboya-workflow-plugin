@@ -38,8 +38,32 @@ withTempRoot((root) => {
 
   // atomic write: no tmp file lingers
   const dir = path.join(root, '.dev-work', 'DCL-1351');
-  const leftover = fs.readdirSync(dir).filter((n) => n.startsWith('.state.json.tmp'));
+  const leftover = fs.readdirSync(dir).filter((n) => n.startsWith('state.json.tmp-'));
   assert.strictEqual(leftover.length, 0);
 
   console.log('state.test.js: OK');
+});
+
+// writeState must not mutate caller's object
+withTempRoot((root) => {
+  const s = newEmptyState('DCL-2');
+  // Pin lastUpdated to a known past value so it is guaranteed distinct from the
+  // timestamp writeState will stamp on the written copy.
+  s.lastUpdated = '2000-01-01T00:00:00.000Z';
+  const beforeStamp = s.lastUpdated;
+  const beforeKeys = Object.keys(s).slice();
+  writeState(root, 'DCL-2', s);
+  assert.strictEqual(s.lastUpdated, beforeStamp, 'caller object lastUpdated was mutated');
+  assert.deepStrictEqual(Object.keys(s), beforeKeys, 'caller object key set was mutated');
+  // And the file on disk should have a fresh timestamp
+  const loaded = readState(root, 'DCL-2');
+  assert.notStrictEqual(loaded.lastUpdated, beforeStamp, 'file should have fresh timestamp');
+});
+
+// readState returns null on corrupt JSON (spec §7: fail open)
+withTempRoot((root) => {
+  const dir = path.join(root, '.dev-work', 'DCL-3');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'state.json'), '{ not valid json');
+  assert.strictEqual(readState(root, 'DCL-3'), null);
 });
