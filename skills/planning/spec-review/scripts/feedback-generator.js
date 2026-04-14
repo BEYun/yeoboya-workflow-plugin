@@ -25,12 +25,82 @@ function main() {
     process.exit(1);
   }
 
+  const errors = validate(data);
+  if (errors.length > 0) {
+    console.error(`Error: review-data.json schema validation failed (${errors.length}):`);
+    for (const err of errors) console.error(`  - ${err}`);
+    process.exit(1);
+  }
+
   const html = renderHTML(data);
 
   const outDir = path.dirname(jsonPath);
   const outPath = path.join(outDir, `${data.taskId}-feedback.html`);
   fs.writeFileSync(outPath, html, 'utf8');
   console.log(outPath);
+}
+
+const REQUIRED_ROOT = ['taskId', 'title', 'subtitle', 'reviewer', 'reviewDate', 'source', 'pages'];
+const REQUIRED_PAGE = ['pageNumber', 'title', 'pass'];
+const REQUIRED_ISSUE = ['type', 'severity', 'title', 'problem', 'suggestion'];
+const VALID_TYPES = new Set(['state', 'edge', 'flow', 'interaction']);
+const VALID_SEVERITIES = new Set(['critical', 'warn', 'info']);
+
+function validate(data) {
+  const errors = [];
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return ['root must be an object'];
+  }
+  for (const field of REQUIRED_ROOT) {
+    if (data[field] === undefined || data[field] === null || data[field] === '') {
+      errors.push(`missing required field: ${field}`);
+    }
+  }
+  if (!Array.isArray(data.pages)) {
+    errors.push('pages must be an array');
+    return errors;
+  }
+  data.pages.forEach((page, i) => {
+    const loc = `pages[${i}]`;
+    if (!page || typeof page !== 'object') {
+      errors.push(`${loc}: must be an object`);
+      return;
+    }
+    for (const field of REQUIRED_PAGE) {
+      if (page[field] === undefined || page[field] === null || page[field] === '') {
+        errors.push(`${loc}.${field}: missing`);
+      }
+    }
+    if (typeof page.pass !== 'boolean') {
+      errors.push(`${loc}.pass: must be boolean`);
+    }
+    if (page.pass === false) {
+      if (!Array.isArray(page.issues) || page.issues.length === 0) {
+        errors.push(`${loc}: pass=false requires at least one issue`);
+      }
+    }
+    if (Array.isArray(page.issues)) {
+      page.issues.forEach((issue, j) => {
+        const iloc = `${loc}.issues[${j}]`;
+        if (!issue || typeof issue !== 'object') {
+          errors.push(`${iloc}: must be an object`);
+          return;
+        }
+        for (const field of REQUIRED_ISSUE) {
+          if (issue[field] === undefined || issue[field] === null || issue[field] === '') {
+            errors.push(`${iloc}.${field}: missing`);
+          }
+        }
+        if (issue.type && !VALID_TYPES.has(issue.type)) {
+          errors.push(`${iloc}.type: must be one of ${[...VALID_TYPES].join('|')} (got "${issue.type}")`);
+        }
+        if (issue.severity && !VALID_SEVERITIES.has(issue.severity)) {
+          errors.push(`${iloc}.severity: must be one of ${[...VALID_SEVERITIES].join('|')} (got "${issue.severity}")`);
+        }
+      });
+    }
+  });
+  return errors;
 }
 
 const TYPE_META = {

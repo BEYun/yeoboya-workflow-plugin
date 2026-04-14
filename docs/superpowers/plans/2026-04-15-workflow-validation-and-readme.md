@@ -4,6 +4,8 @@
 
 **Goal:** Add a centralized validation skill + PreToolUse hook that verifies workflow stage outputs are produced by the correct skill and match the expected structure, and ship two READMEs (user-facing, contributor-facing).
 
+> **Scope deferral (2026-04-15):** Tasks 7 and 8 (README.md, CONTRIBUTING.md) are deferred to a later iteration. Execute Tasks 1–6 and Task 9 only.
+
 **Architecture:** `.claude/active-task` points to the current task; per-task state lives at `.dev-work/<task>/state.json`. The `/dev` skill writes state before routing to a generator skill, then invokes `skills/common/validate` afterward. A Node.js PreToolUse hook (`hooks/stage-guard.js`) blocks Notion writes whose page title does not match the currently active stage. Generator skills (spec-review, ui-flow, etc.) are untouched except for a one-line pointer note.
 
 **Tech Stack:** Node.js (hook and lib, following the existing `feedback-generator.js` precedent), Markdown (skill definitions and READMEs), Claude Code plugin hooks, Notion MCP tools (consumed).
