@@ -70,7 +70,7 @@ Notion QA 보드에 저장하시겠습니까?
 
 **skills/common/notion-writer** 스킬을 사용한다. **QA 보드 페이지**에 저장한다 (정책서/설계서 페이지가 아님):
 
-1. service-config에서 **qa** 페이지 ID 조회
+1. skills/setting/service-config에서 **qa** 페이지 ID 조회
 2. qa 페이지 하위에서 작업번호 페이지 검색/생성
 3. 작업번호 페이지 하위에 **"QA 시트"** 서브페이지 생성
 
