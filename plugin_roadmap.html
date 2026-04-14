@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>여보야 사내 플러그인 개발 로드맵</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2330;
+    --auto-primary: #00c2ff;
+    --auto-glow: rgba(0, 194, 255, 0.15);
+    --auto-dim: rgba(0, 194, 255, 0.06);
+    --opt-primary: #ff6b35;
+    --opt-glow: rgba(255, 107, 53, 0.15);
+    --opt-dim: rgba(255, 107, 53, 0.06);
+    --skill-bg: #1a1f2e;
+    --skill-border: #2a3045;
+    --text-primary: #e8ecf4;
+    --text-secondary: #7a8299;
+    --text-dim: #4a5068;
+    --accent: #a78bfa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Noto Sans KR', sans-serif;
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BG */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 60px 32px 100px;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 72px;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  .header-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .header h1 {
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 900;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+
+  .header h1 span {
+    background: linear-gradient(135deg, var(--auto-primary), var(--accent), var(--opt-primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-sub {
+    font-size: 15px;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* PLUGIN CORE */
+  .plugin-core {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+    animation: fadeDown 0.8s 0.2s ease both;
+  }
+
+  .core-badge {
+    background: linear-gradient(135deg, #1a1f35, #111824);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 48px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 0 60px rgba(167, 139, 250, 0.08);
+  }
+
+  .core-badge::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(167,139,250,0.4), rgba(0,194,255,0.2), rgba(255,107,53,0.2));
+    z-index: -1;
+    opacity: 0.5;
+  }
+
+  .core-badge .label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .core-badge h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .core-badge .services {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .service-tag {
+    font-size: 11px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* BRANCH CONNECTOR */
+  .branch-connector {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0;
+    position: relative;
+    margin-bottom: 0;
+    animation: fadeDown 0.8s 0.3s ease both;
+  }
+
+  .branch-line-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 50%;
+  }
+
+  .branch-line-wrap.left { align-items: flex-end; padding-right: 0; }
+  .branch-line-wrap.right { align-items: flex-start; padding-left: 0; }
+
+  .branch-v { width: 2px; height: 28px; background: var(--border); }
+  .branch-h {
+    height: 2px;
+    width: calc(50% + 2px);
+    background: var(--border);
+  }
+  .branch-line-wrap.left .branch-h { margin-right: -2px; }
+  .branch-line-wrap.right .branch-h { margin-left: -2px; }
+
+  .branch-down { width: 2px; height: 28px; }
+  .branch-line-wrap.left .branch-down { background: var(--auto-primary); opacity: 0.6; align-self: flex-end; margin-right: -1px; }
+  .branch-line-wrap.right .branch-down { background: var(--opt-primary); opacity: 0.6; align-self: flex-start; margin-left: -1px; }
+
+  /* TWO COLUMNS */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  /* COLUMN */
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+
+  .col.col-opt { animation-delay: 0.5s; }
+
+  /* COLUMN HEADER */
+  .col-header {
+    border-radius: 14px;
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .col-header.auto {
+    background: var(--auto-dim);
+    border: 1px solid rgba(0, 194, 255, 0.25);
+    box-shadow: 0 0 40px rgba(0, 194, 255, 0.08);
+  }
+
+  .col-header.opt {
+    background: var(--opt-dim);
+    border: 1px solid rgba(255, 107, 53, 0.25);
+    box-shadow: 0 0 40px rgba(255, 107, 53, 0.08);
+  }
+
+  .col-header-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  .col-header-text h3 {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .auto .col-header-text h3 { color: var(--auto-primary); }
+  .opt .col-header-text h3 { color: var(--opt-primary); }
+
+  .col-header-text p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* SECTION CARD */
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .section-title {
+    padding: 14px 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .auto .section-title .dot { background: var(--auto-primary); box-shadow: 0 0 8px var(--auto-primary); }
+  .opt .section-title .dot { background: var(--opt-primary); box-shadow: 0 0 8px var(--opt-primary); }
+  .section-title.problem .dot { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+  .section-title.solution .dot { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+
+  .section-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+
+  /* PROBLEM ITEM */
+  .problem-item {
+    background: rgba(239,68,68,0.04);
+    border: 1px solid rgba(239,68,68,0.12);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .problem-item .p-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #ef4444;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .problem-item .p-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .problem-item .p-desc {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .result-tag {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 10px;
+    color: #ef4444;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.15);
+    border-radius: 20px;
+    padding: 2px 8px;
+  }
+
+  /* SOLUTION ITEM — redesigned */
+  .solution-item {
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(34,197,94,0.04);
+    border: 1px solid rgba(34,197,94,0.14);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .solution-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: #22c55e;
+    border-radius: 3px 0 0 3px;
+    opacity: 0.7;
+  }
+
+  .solution-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .sol-problem-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: rgba(239,68,68,0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.2);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .solution-main {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.5;
+    letter-spacing: -0.2px;
+  }
+
+  .solution-effect {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: #22c55e;
+    font-weight: 500;
+  }
+
+  .solution-effect::before {
+    content: '✓';
+    font-size: 11px;
+    opacity: 0.8;
+  }
+
+  /* SKILLS SECTION */
+  .skills-section {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid transparent;
+    position: relative;
+  }
+
+  .auto .skills-section { 
+    background: var(--auto-dim);
+    border-color: rgba(0, 194, 255, 0.2);
+  }
+
+  .opt .skills-section {
+    background: var(--opt-dim);
+    border-color: rgba(255, 107, 53, 0.2);
+  }
+
+  .skills-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .auto .skills-header { color: var(--auto-primary); }
+  .opt .skills-header { color: var(--opt-primary); }
+
+  .skills-body {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .skill-card {
+    background: var(--skill-bg);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: default;
+  }
+
+  .skill-card:hover {
+    transform: translateX(4px);
+  }
+
+  .auto .skill-card {
+    border: 1px solid rgba(0, 194, 255, 0.2);
+    box-shadow: inset 0 0 20px rgba(0, 194, 255, 0.03);
+  }
+
+  .auto .skill-card:hover {
+    box-shadow: 0 4px 24px rgba(0, 194, 255, 0.15), inset 0 0 20px rgba(0, 194, 255, 0.05);
+  }
+
+  .opt .skill-card {
+    border: 1px solid rgba(255, 107, 53, 0.2);
+    box-shadow: inset 0 0 20px rgba(255, 107, 53, 0.03);
+  }
+
+  .opt .skill-card:hover {
+    box-shadow: 0 4px 24px rgba(255, 107, 53, 0.15), inset 0 0 20px rgba(255, 107, 53, 0.05);
+  }
+
+  .skill-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+
+  .auto .skill-num {
+    background: rgba(0, 194, 255, 0.12);
+    color: var(--auto-primary);
+    border: 1px solid rgba(0, 194, 255, 0.25);
+  }
+
+  .opt .skill-num {
+    background: rgba(255, 107, 53, 0.12);
+    color: var(--opt-primary);
+    border: 1px solid rgba(255, 107, 53, 0.25);
+  }
+
+  .skill-info { flex: 1; }
+
+  .skill-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+
+  .skill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .auto .skill-badge {
+    background: rgba(0, 194, 255, 0.1);
+    color: var(--auto-primary);
+    border: 1px solid rgba(0, 194, 255, 0.2);
+  }
+
+  .opt .skill-badge {
+    background: rgba(255, 107, 53, 0.1);
+    color: var(--opt-primary);
+    border: 1px solid rgba(255, 107, 53, 0.2);
+  }
+
+  /* ROOT CAUSE */
+  .root-cause {
+    background: rgba(167, 139, 250, 0.06);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 4px;
+  }
+
+  .root-cause .rc-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .root-cause p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .root-cause strong {
+    color: var(--text-primary);
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* CONNECTOR VISUAL */
+  .divider-center {
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, var(--border), transparent);
+    display: none;
+  }
+
+  /* SUMMARY BAR */
+  .summary-bar {
+    margin-top: 48px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 36px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 24px;
+    align-items: center;
+    animation: fadeUp 0.8s 0.7s ease both;
+  }
+
+  .summary-side { display: flex; flex-direction: column; gap: 12px; }
+
+  .summary-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+
+  .summary-item .s-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .summary-item strong { color: var(--text-primary); }
+
+  .summary-center {
+    text-align: center;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 0 36px;
+  }
+
+  .total-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .total-count {
+    font-size: 52px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--auto-primary), var(--accent), var(--opt-primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .total-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  @media (max-width: 900px) {
+    .two-col { grid-template-columns: 1fr; }
+    .summary-bar { grid-template-columns: 1fr; }
+    .summary-center { border: none; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 20px 0; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-eyebrow">Solution Development Team · Claude Code Plugin</div>
+    <h1>여보야 사내<br><span>플러그인 개발 로드맵</span></h1>
+    <p class="header-sub">달라·클럽라이브·여보야·클럽5678·식단AI 개발 파이프라인을 Claude Code 플러그인으로 자동화 및 최적화</p>
+  </div>
+
+  <!-- PLUGIN CORE BADGE -->
+  <div class="plugin-core">
+    <div class="core-badge">
+      <div class="label">Claude Code Plugin</div>
+      <h2>🔌 사내 플러그인</h2>
+      <div class="services">
+        <span class="service-tag">달라</span>
+        <span class="service-tag">클럽라이브</span>
+        <span class="service-tag">여보야</span>
+        <span class="service-tag">클럽5678</span>
+        <span class="service-tag">식단AI</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRANCH CONNECTOR -->
+  <div class="branch-connector">
+    <div class="branch-line-wrap left">
+      <div class="branch-v"></div>
+      <div class="branch-h"></div>
+      <div class="branch-down"></div>
+    </div>
+    <div class="branch-line-wrap right">
+      <div class="branch-v"></div>
+      <div class="branch-h"></div>
+      <div class="branch-down"></div>
+    </div>
+  </div>
+
+  <!-- TWO COLUMNS -->
+  <div class="two-col">
+
+    <!-- ===== 자동화 ===== -->
+    <div class="col auto">
+      <div class="col-header auto">
+        <div class="col-header-icon">⚙️</div>
+        <div class="col-header-text">
+          <h3>1. 자동화</h3>
+          <p>솔루션개발부(iOS/Android) 단독 작업<br>코드 작성 · 단위 테스트 · UI 테스트</p>
+        </div>
+      </div>
+
+      <!-- 근본 원인 -->
+      <div class="section-card auto">
+        <div class="section-title problem">
+          <span class="dot"></span>
+          근본 원인
+        </div>
+        <div class="section-body">
+          <div class="root-cause">
+            <div class="rc-label">⚠ Root Cause</div>
+            <p><strong>"코드 작성과 검증을 전적으로 개발자 개인의 역량과 판단에 의존"</strong><br>자동화 장치가 없어 코드 품질이 개발자마다 달라지고 버그가 배포 후에야 발견됨</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 문제점 -->
+      <div class="section-card auto">
+        <div class="section-title problem">
+          <span class="dot" style="background:#ef4444;box-shadow:0 0 8px #ef4444;"></span>
+          문제점 정의
+        </div>
+        <div class="section-body">
+          <div class="problem-item">
+            <div class="p-label">문제 1 · 구현</div>
+            <div class="p-title">플랫폼 간 구현 불일치</div>
+            <div class="p-desc">iOS · Android · Web이 동일 기능을 각자 방식으로 구현. 공통 로직·예외 처리 기준 없음.</div>
+            <span class="result-tag">→ 플랫폼별 동작 차이 · 재작업 루프</span>
+          </div>
+          <div class="problem-item">
+            <div class="p-label">문제 2 · 품질</div>
+            <div class="p-title">코드 품질 기준 부재</div>
+            <div class="p-desc">컨벤션, 네이밍, 아키텍처 패턴이 개발자 재량에 맡겨짐.</div>
+            <span class="result-tag">→ 유지보수 비용 증가 · 온보딩 난이도 상승</span>
+          </div>
+          <div class="problem-item">
+            <div class="p-label">문제 3 · 테스트</div>
+            <div class="p-title">단위·UI 테스트 자동화 부재</div>
+            <div class="p-desc">변경 시 어디가 깨지는지 알 수 없어 전수 수동 확인에 의존.</div>
+            <span class="result-tag">→ 회귀 버그 상존 · 핫픽스 반복</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 해결 방안 -->
+      <div class="section-card auto">
+        <div class="section-title solution">
+          <span class="dot" style="background:#22c55e;box-shadow:0 0 8px #22c55e;"></span>
+          해결 방안
+        </div>
+        <div class="section-body">
+          <div class="solution-item">
+            <div class="solution-top">
+              <span class="sol-problem-tag">문제 1 · 구현 불일치</span>
+            </div>
+            <div class="solution-main">기획서 기반 플랫폼 공통 비즈니스 로직 명세 및 엣지케이스 자동 정리</div>
+            <span class="solution-effect">구현 전 공통 기준 확보 → 플랫폼 간 불일치 사전 차단</span>
+          </div>
+          <div class="solution-item">
+            <div class="solution-top">
+              <span class="sol-problem-tag">문제 2 · 품질 기준 부재</span>
+            </div>
+            <div class="solution-main">코드 컨벤션·아키텍처 패턴 준수 여부 자동 검토 및 리뷰</div>
+            <span class="solution-effect">개발자 역량과 무관하게 일정 수준 이상 품질 보장</span>
+          </div>
+          <div class="solution-item">
+            <div class="solution-top">
+              <span class="sol-problem-tag">문제 3 · 테스트 부재</span>
+            </div>
+            <div class="solution-main">구현 코드와 기획서 기반 단위·UI 테스트 자동 생성</div>
+            <span class="solution-effect">기능 추가·수정 시 회귀 버그 자동 감지</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SKILLS -->
+      <div class="section-card auto skills-section">
+        <div class="skills-header">
+          ✦ 생성될 Skills (자동화)
+        </div>
+        <div class="skills-body">
+          <div class="skill-card">
+            <div class="skill-num">1</div>
+            <div class="skill-info">
+              <div class="skill-title">플랫폼 공통 비즈니스 로직 명세 산출</div>
+              <span class="skill-badge">📋 Skill</span>
+            </div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-num">2</div>
+            <div class="skill-info">
+              <div class="skill-title">코드 컨벤션·아키텍처 패턴 자동 리뷰</div>
+              <span class="skill-badge">🔍 Skill</span>
+            </div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-num">3</div>
+            <div class="skill-info">
+              <div class="skill-title">단위 테스트 및 UI 테스트 자동 생성</div>
+              <span class="skill-badge">🧪 Skill</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 최적화 ===== -->
+    <div class="col col-opt opt">
+      <div class="col-header opt">
+        <div class="col-header-icon">🚀</div>
+        <div class="col-header-text">
+          <h3>2. 최적화</h3>
+          <p>타 부서 단독 또는 협업 작업<br>기획 회의 · 개발 회의 · 통합 테스트</p>
+        </div>
+      </div>
+
+      <!-- 근본 원인 -->
+      <div class="section-card opt">
+        <div class="section-title problem">
+          <span class="dot" style="background:#ef4444;box-shadow:0 0 8px #ef4444;"></span>
+          근본 원인
+        </div>
+        <div class="section-body">
+          <div class="root-cause">
+            <div class="rc-label">⚠ Root Cause</div>
+            <p><strong>"기획서를 각 직군이 독립적으로 해석하고 작업을 시작"</strong><br>공통 해석 기준 없이 백엔드·디자인·iOS·Android·Web이 동시 작업 → 불일치가 구조적으로 발생</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 문제점 -->
+      <div class="section-card opt">
+        <div class="section-title problem">
+          <span class="dot" style="background:#ef4444;box-shadow:0 0 8px #ef4444;"></span>
+          문제점 정의
+        </div>
+        <div class="section-body">
+          <div class="problem-item">
+            <div class="p-label">문제 1 · 기획</div>
+            <div class="p-title">기획서 품질 문제</div>
+            <div class="p-desc">모호한 정책, 누락된 엣지케이스, 미정의 예외처리로 각자 빈칸을 채워 해석.</div>
+            <span class="result-tag">→ 직군별 해석 차이 발생</span>
+          </div>
+          <div class="problem-item">
+            <div class="p-label">문제 2 · 디자인</div>
+            <div class="p-title">누락 및 불일치 디자인</div>
+            <div class="p-desc">모호한 기획서 기반 디자인으로 엣지케이스 대응 및 공통화 미준수.</div>
+            <span class="result-tag">→ 개발자로부터 수정 요청 반복</span>
+          </div>
+          <div class="problem-item">
+            <div class="p-label">문제 3 · 개발</div>
+            <div class="p-title">공통 설계 기준 부재</div>
+            <div class="p-desc">용어·데이터 모델·비즈니스 로직을 누가 어떻게 해석했는지 알 수 없음.</div>
+            <span class="result-tag">→ 백엔드/iOS/Android/Web 다른 구현</span>
+          </div>
+          <div class="problem-item">
+            <div class="p-label">문제 4 · 백엔드</div>
+            <div class="p-title">API 스펙 검증 지연</div>
+            <div class="p-desc">표준 포맷 없이 작업 완료 후 Swagger 공유 → 프론트엔드 연동 전 스펙 미확인.</div>
+            <span class="result-tag">→ 연동 시 스펙 불일치 재작업</span>
+          </div>
+          <div class="problem-item">
+            <div class="p-label">문제 5 · 테스트</div>
+            <div class="p-title">미흡한 테스트</div>
+            <div class="p-desc">작업 지연으로 테스트 기간 단축, 미흡한 시나리오로 엣지케이스 미검증.</div>
+            <span class="result-tag">→ 배포 후 버그 발견 · 핫픽스</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 해결 방안 -->
+      <div class="section-card opt">
+        <div class="section-title solution">
+          <span class="dot" style="background:#22c55e;box-shadow:0 0 8px #22c55e;"></span>
+          해결 방안
+        </div>
+        <div class="section-body">
+          <div class="solution-item">
+            <div class="solution-top">
+              <span class="sol-problem-tag">문제 1 · 기획 품질</span>
+            </div>
+            <div class="solution-main">기획서 검증 및 기획회의용 체크리스트 자동 작성</div>
+            <span class="solution-effect">회의 전 기획서 완성도 확보 → 해석 차이 원천 차단</span>
+          </div>
+          <div class="solution-item">
+            <div class="solution-top">
+              <span class="sol-problem-tag">문제 2 · 디자인 불일치</span>
+            </div>
+            <div class="solution-main">기획서 기반 UI 흐름도 자동 산출</div>
+            <span class="solution-effect">누락 엣지케이스 대응 및 화면 전환 통일화</span>
+          </div>
+          <div class="solution-item">
+            <div class="solution-top">
+              <span class="sol-problem-tag">문제 3 · 설계 기준</span>
+              <span class="sol-problem-tag">문제 4 · API 스펙</span>
+            </div>
+            <div class="solution-main">기획서 기반 데이터 흐름도 및 공통 설계서 스캐폴드 산출</div>
+            <span class="solution-effect">개발회의 기반 작업 범위·API 엔드포인트 사전 확정</span>
+          </div>
+          <div class="solution-item">
+            <div class="solution-top">
+              <span class="sol-problem-tag">문제 5 · 미흡한 테스트</span>
+            </div>
+            <div class="solution-main">기획서·설계서·수정 코드 기반 테스트 시나리오 자동 작성</div>
+            <span class="solution-effect">통합 테스트 QA 시나리오 완성도 확보</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SKILLS -->
+      <div class="section-card opt skills-section">
+        <div class="skills-header">
+          ✦ 생성될 Skills (최적화)
+        </div>
+        <div class="skills-body">
+          <div class="skill-card">
+            <div class="skill-num">1</div>
+            <div class="skill-info">
+              <div class="skill-title">기획서 검증 및 체크리스트 산출</div>
+              <span class="skill-badge">📌 Skill</span>
+            </div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-num">2</div>
+            <div class="skill-info">
+              <div class="skill-title">기획서 기반 UI 흐름도 산출</div>
+              <span class="skill-badge">🖼 Skill</span>
+            </div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-num">3</div>
+            <div class="skill-info">
+              <div class="skill-title">기획서 기반 데이터 흐름도 산출</div>
+              <span class="skill-badge">🔀 Skill</span>
+            </div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-num">4</div>
+            <div class="skill-info">
+              <div class="skill-title">데이터 흐름도 기반 공통 설계서 스캐폴드 산출</div>
+              <span class="skill-badge">🏗 Skill</span>
+            </div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-num">5</div>
+            <div class="skill-info">
+              <div class="skill-title">기획서·설계서·수정 코드 기반 테스트 시나리오 작성</div>
+              <span class="skill-badge">✅ Skill</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /two-col -->
+
+  <!-- SUMMARY BAR -->
+  <div class="summary-bar">
+    <div class="summary-side">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--auto-primary);text-transform:uppercase;margin-bottom:4px;">⚙ 자동화 Skills</div>
+      <div class="summary-item"><span class="s-dot" style="background:var(--auto-primary);"></span><span>플랫폼 공통 비즈니스 로직 명세 산출</span></div>
+      <div class="summary-item"><span class="s-dot" style="background:var(--auto-primary);"></span><span>코드 컨벤션·아키텍처 패턴 자동 리뷰</span></div>
+      <div class="summary-item"><span class="s-dot" style="background:var(--auto-primary);"></span><span>단위 테스트 및 UI 테스트 자동 생성</span></div>
+    </div>
+
+    <div class="summary-center">
+      <div class="total-label">Total Skills</div>
+      <div class="total-count">8</div>
+      <div class="total-sub">Skills to Build</div>
+    </div>
+
+    <div class="summary-side" style="align-items:flex-end;text-align:right;">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--opt-primary);text-transform:uppercase;margin-bottom:4px;">최적화 Skills 🚀</div>
+      <div class="summary-item" style="flex-direction:row-reverse;"><span class="s-dot" style="background:var(--opt-primary);"></span><span>기획서 검증 및 체크리스트 산출</span></div>
+      <div class="summary-item" style="flex-direction:row-reverse;"><span class="s-dot" style="background:var(--opt-primary);"></span><span>기획서 기반 UI 흐름도 산출</span></div>
+      <div class="summary-item" style="flex-direction:row-reverse;"><span class="s-dot" style="background:var(--opt-primary);"></span><span>기획서 기반 데이터 흐름도 산출</span></div>
+      <div class="summary-item" style="flex-direction:row-reverse;"><span class="s-dot" style="background:var(--opt-primary);"></span><span>공통 설계서 스캐폴드 산출</span></div>
+      <div class="summary-item" style="flex-direction:row-reverse;"><span class="s-dot" style="background:var(--opt-primary);"></span><span>테스트 시나리오 작성</span></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
