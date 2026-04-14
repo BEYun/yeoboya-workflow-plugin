@@ -225,6 +225,10 @@ git log --grep='\[작업번호\]'
 - **서비스/플랫폼/작업자** — dev-config.json에서 읽은 값
 - **신규/변경 구분** — 4번이면 신규, 5번이면 변경 (skills/blueprint/tech-spec에 전달)
 
+### artifactPageId 캐싱
+
+validate 스킬이 notion-writer로 산출물 페이지를 찾을 때 page_id를 알아내므로, validate가 이 값을 `state.json`의 `stages[n].artifactPageId`에 기록하도록 내부적으로 위임한다. `/dev`는 이 필드를 직접 관리하지 않는다.
+
 ---
 
 ## 8. 단계 완료 후
