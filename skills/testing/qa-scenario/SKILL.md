@@ -19,7 +19,7 @@ version: 0.1.0
 ## 입력
 
 1. **기획서 PDF** — 기능 요구사항 원본
-2. **공통 설계** — Notion에서 notion-writer 스킬로 "공통 설계" 서브페이지를 읽는다
+2. **공통 설계** — Notion에서 **skills/common/notion-writer** 스킬로 "공통 설계" 서브페이지를 읽는다
 3. **구현 코드** — 현재 프로젝트의 코드
 
 ---
@@ -68,7 +68,7 @@ Notion QA 보드에 저장하시겠습니까?
 
 ## Notion 저장
 
-notion-writer 스킬을 사용한다. **QA 보드 페이지**에 저장한다 (정책서/설계서 페이지가 아님):
+**skills/common/notion-writer** 스킬을 사용한다. **QA 보드 페이지**에 저장한다 (정책서/설계서 페이지가 아님):
 
 1. service-config에서 **qa** 페이지 ID 조회
 2. qa 페이지 하위에서 작업번호 페이지 검색/생성

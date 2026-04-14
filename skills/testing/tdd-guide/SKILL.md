@@ -14,7 +14,7 @@ version: 0.1.0
 
 ## 입력
 
-1. **공통 설계** — Notion에서 notion-writer 스킬로 "공통 설계" 서브페이지를 읽는다
+1. **공통 설계** — Notion에서 **skills/common/notion-writer** 스킬로 "공통 설계" 서브페이지를 읽는다
 2. **프로젝트 CLAUDE.md** — 테스트 프레임워크와 컨벤션 확인
 3. **플랫폼** — `.claude/dev-config.json`의 platform 값
 

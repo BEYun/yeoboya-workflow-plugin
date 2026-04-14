@@ -12,7 +12,7 @@ version: 0.1.0
 
 ## 입력
 
-1. **공통 설계** — Notion에서 notion-writer 스킬로 읽거나, 직전 단계에서 전달
+1. **공통 설계** — Notion에서 **skills/common/notion-writer** 스킬로 읽거나, 직전 단계에서 전달
 2. **실패 테스트** — tdd-guide 스킬에서 작성한 Red 상태의 테스트
 3. **프로젝트 CLAUDE.md** — 아키텍처, 컨벤션, DI 방식, 파일 구조 정의
 
