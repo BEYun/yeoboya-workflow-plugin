@@ -73,7 +73,7 @@ version: 0.1.0
 
 ## 설정 파일: .claude/dev-config.json
 
-`/dev-init` 스킬이 생성하는 개인 설정 파일. git에 포함하지 않는다.
+`/setting/dev-init` 스킬이 생성하는 개인 설정 파일. git에 포함하지 않는다.
 
 ```json
 {

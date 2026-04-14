@@ -71,7 +71,7 @@ version: 0.1.0
 3. **Verify** — 전체 테스트 실행, 기존 테스트도 통과 확인
 
 ### 코드리뷰
-`code-review` 스킬을 호출하여 수정된 코드를 리뷰한다.
+`skills/development/code-review` 스킬을 호출하여 수정된 코드를 리뷰한다.
 
 ### 커밋
 ```

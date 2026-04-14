@@ -38,7 +38,7 @@ Notion MCP 서버의 도구를 사용한다:
 ## 작업번호 페이지 조회/생성
 
 ```
-1. service-config 스킬에서 현재 서비스의 정책서/설계서 페이지 ID 조회 (매핑 키: design)
+1. skills/setting/service-config 스킬에서 현재 서비스의 정책서/설계서 페이지 ID 조회 (매핑 키: design)
 2. search로 해당 페이지 하위에서 작업번호 검색
 3. 있으면 → 페이지 ID 반환
 4. 없으면 → create-pages로 작업번호를 제목으로 새 페이지 생성 후 ID 반환
@@ -83,7 +83,7 @@ Notion MCP 서버의 도구를 사용한다:
 ## QA 보드 저장 (7단계)
 
 ```
-1. service-config에서 현재 서비스의 qa 페이지 ID 조회
+1. skills/setting/service-config에서 현재 서비스의 qa 페이지 ID 조회
 2. qa 페이지 하위에서 작업번호 페이지 검색/생성
 3. 작업번호 페이지 하위에 "QA 시트" 서브페이지 생성/업데이트
 ```

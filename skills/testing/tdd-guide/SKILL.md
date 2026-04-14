@@ -6,7 +6,7 @@ version: 0.1.0
 
 # tdd-guide
 
-공통 설계(common-design)의 각 섹션을 기반으로 테스트 케이스를 도출하고, TDD 사이클(Red → Green → Refactor)로 진행한다.
+공통 설계(**skills/blueprint/tech-spec**)의 각 섹션을 기반으로 테스트 케이스를 도출하고, TDD 사이클(Red → Green → Refactor)로 진행한다.
 
 이 스킬은 `superpowers:test-driven-development` 스킬을 활용한다. TDD 사이클의 구체적인 진행 방법은 해당 스킬을 따른다.
 

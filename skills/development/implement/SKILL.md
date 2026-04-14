@@ -6,14 +6,14 @@ version: 0.1.0
 
 # implement
 
-공통 설계를 기반으로, tdd-guide에서 작성한 실패 테스트를 통과시키는 코드를 작성한다. 프로젝트 CLAUDE.md의 아키텍처/컨벤션을 따른다.
+공통 설계를 기반으로, **skills/testing/tdd-guide**에서 작성한 실패 테스트를 통과시키는 코드를 작성한다. 프로젝트 CLAUDE.md의 아키텍처/컨벤션을 따른다.
 
 ---
 
 ## 입력
 
 1. **공통 설계** — Notion에서 **skills/common/notion-writer** 스킬로 읽거나, 직전 단계에서 전달
-2. **실패 테스트** — tdd-guide 스킬에서 작성한 Red 상태의 테스트
+2. **실패 테스트** — **skills/testing/tdd-guide** 스킬에서 작성한 Red 상태의 테스트
 3. **프로젝트 CLAUDE.md** — 아키텍처, 컨벤션, DI 방식, 파일 구조 정의
 
 CLAUDE.md가 없거나 관련 내용이 없으면 사용자에게 확인한다:
@@ -81,9 +81,9 @@ CLAUDE.md를 기반으로 실시간 가이드한다:
 
 ## 구현 완료 후
 
-모든 테스트가 통과하면 **code-review 스킬**을 트리거한다:
+모든 테스트가 통과하면 **skills/development/code-review** 스킬을 트리거한다:
 
 ```
 구현이 완료되었습니다. 코드리뷰를 진행합니다.
-→ code-review 스킬 호출
+→ skills/development/code-review 스킬 호출
 ```
