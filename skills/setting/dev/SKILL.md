@@ -16,7 +16,7 @@ argument-hint: [작업번호] (선택)
 
 **없으면:**
 ```
-'/dev-init'을 먼저 실행하여 초기 설정을 완료해주세요.
+'/setting/dev-init'을 먼저 실행하여 초기 설정을 완료해주세요.
 ```
 여기서 종료.
 
@@ -43,7 +43,7 @@ argument로 작업번호가 전달된 경우 질문을 생략한다.
 
 작업번호 입력 후 **모든 단계의 완료 상태**를 한번에 확인한다.
 
-### Notion 검증 (notion-writer 스킬 사용)
+### Notion 검증 (skills/common/notion-writer 스킬 사용)
 
 작업번호 페이지 하위 서브페이지 존재 여부로 확인:
 
@@ -146,13 +146,13 @@ git log --grep='\[작업번호\]'
 
 | 선택 | 호출 스킬 |
 |------|----------|
-| 1 | `spec-review` |
-| 2 | `ui-flow` |
-| 3 | `data-flow` |
-| 4 | `common-design` → `tdd-guide` → `implement` → `code-review` (순차 실행) |
-| 5 | `common-design` (변경 모드) → `tdd-guide` → `implement` → `code-review` (순차 실행) |
-| 6 | `bug-fix` (내부에서 code-review 호출) |
-| 7 | `qa-scenario` |
+| 1 | `skills/planning/spec-review` |
+| 2 | `skills/blueprint/ui-flow` |
+| 3 | `skills/blueprint/data-flow` |
+| 4 | `skills/blueprint/tech-spec` → `skills/testing/tdd-guide` → `skills/development/implement` → `skills/development/code-review` (순차 실행) |
+| 5 | `skills/blueprint/tech-spec` (변경 모드) → `skills/testing/tdd-guide` → `skills/development/implement` → `skills/development/code-review` (순차 실행) |
+| 6 | `skills/development/bug-fix` (내부에서 skills/development/code-review 호출) |
+| 7 | `skills/testing/qa-scenario` |
 
 4번과 5번은 4개 스킬을 순차 실행한다. 각 스킬이 완료된 후 다음으로 자동 진행한다.
 
