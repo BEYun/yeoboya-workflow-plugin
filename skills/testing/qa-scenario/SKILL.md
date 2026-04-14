@@ -19,7 +19,7 @@ version: 0.1.0
 ## 입력
 
 1. **기획서 PDF** — 기능 요구사항 원본
-2. **공통 설계** — Notion에서 **skills/common/notion-writer** 스킬로 "공통 설계" 서브페이지를 읽는다
+2. **공통 설계** — Notion에서 **skills/common/notion-writer** 스킬로 "기술 설계" 서브페이지를 읽는다
 3. **구현 코드** — 현재 프로젝트의 코드
 
 ---

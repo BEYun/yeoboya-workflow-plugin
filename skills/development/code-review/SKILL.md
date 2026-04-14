@@ -15,7 +15,7 @@ version: 0.1.0
 ## 입력
 
 1. **리뷰 대상** — 구현된 코드 파일/디렉토리 (**skills/development/implement** 스킬에서 자동 전달되거나 사용자가 경로 지정)
-2. **공통 설계** — Notion에서 **skills/common/notion-writer** 스킬로 "공통 설계" 서브페이지를 읽는다
+2. **공통 설계** — Notion에서 **skills/common/notion-writer** 스킬로 "기술 설계" 서브페이지를 읽는다
 3. **CLAUDE.md** — 프로젝트 컨벤션 기준
 
 공통 설계가 Notion에 없으면 코드 자체 기준으로 검토하고 사용자에게 안내한다.
