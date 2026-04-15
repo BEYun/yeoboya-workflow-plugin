@@ -6,11 +6,12 @@
 
 | 스킬 | 설명 |
 |------|------|
-| tdd-guide | 설계 기반 테스트 케이스 도출, Red-Green-Refactor 사이클 가이드 |
 | qa-scenario | 기획서/설계/코드 기반 3단계 QA 테스트 매트릭스 생성 |
 
 ## 실행 순서
 
 ```
-tdd-guide (개발 전) → qa-scenario (개발 후)
+qa-scenario (개발 후)
 ```
+
+> TDD 사이클은 `skills/development/code-write` 내부에서 `superpowers:test-driven-development`로 수행된다.

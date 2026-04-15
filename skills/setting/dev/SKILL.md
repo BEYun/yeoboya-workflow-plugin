@@ -187,8 +187,8 @@ git log --grep='\[작업번호\]'
 | 1 | `skills/planning/spec-review` |
 | 2 | `skills/blueprint/ui-flow` |
 | 3 | `skills/blueprint/data-flow` |
-| 4 | `skills/blueprint/tech-spec` → `skills/testing/tdd-guide` → `skills/development/implement` → `skills/development/code-review` (순차 실행) |
-| 5 | `skills/blueprint/tech-spec` (변경 모드) → `skills/testing/tdd-guide` → `skills/development/implement` → `skills/development/code-review` (순차 실행) |
+| 4 | `skills/blueprint/tech-spec` → `skills/development/code-write` → `skills/development/code-review` (순차 실행) |
+| 5 | `skills/blueprint/tech-spec` (변경 모드) → `skills/development/code-write` → `skills/development/code-review` (순차 실행) |
 | 6 | `skills/development/bug-fix` (내부에서 skills/development/code-review 호출) |
 | 7 | `skills/testing/qa-scenario` |
 

@@ -1,19 +1,31 @@
 ---
-name: implement
-description: 공통 설계와 TDD 테스트를 기반으로 플랫폼별 코드를 구현할 때 사용. 프로젝트 CLAUDE.md의 아키텍처와 컨벤션을 따르며, 테스트를 통과시키는 방향으로 코드를 작성한다. 구현 완료 후 code-review 스킬을 트리거한다. "코드 구현", "implement", "플랫폼 구현", "코드 작성"
+name: code-write
+description: 확정된 blueprint를 기반으로 플랫폼별 코드를 작성할 때 사용. superpowers의 brainstorming → writing-plans → test-driven-development 체인을 필수 선행으로 수행하고, 프로젝트 CLAUDE.md의 아키텍처와 컨벤션을 따른다. 작성 완료 후 code-review 스킬을 트리거한다. "코드 작성", "개발", "플랫폼 구현", "code-write"
 version: 0.1.0
 ---
 
-# implement
+# code-write
 
-공통 설계를 기반으로, **skills/testing/tdd-guide**에서 작성한 실패 테스트를 통과시키는 코드를 작성한다. 프로젝트 CLAUDE.md의 아키텍처/컨벤션을 따른다.
+확정된 blueprint를 기반으로, `superpowers:test-driven-development`의 Red 단계에서 작성된 실패 테스트를 통과시키는 코드를 작성한다. 프로젝트 CLAUDE.md의 아키텍처/컨벤션을 따른다.
+
+---
+
+## superpowers 파이프라인 (필수 선행)
+
+blueprint 문서가 확정된 상태에서 코드 작성에 진입하기 전, 아래 순서로 superpowers 스킬을 호출한다.
+
+1. **superpowers:brainstorming** — 확정된 blueprint를 입력으로, 작성 단위(데이터 모델/리포지토리/비즈니스/UI) 수준에서 세부 설계를 재점검한다. brainstorming의 terminal state는 writing-plans 호출이다.
+2. **superpowers:writing-plans** — brainstorming에서 합의된 설계를 기반으로 작업번호별 작성 plan을 작성한다. blueprint(산출물)와 plan(실행 단위)은 서로 다른 층위다.
+3. **superpowers:test-driven-development** — plan의 각 실행 단위마다 Red → Green → Refactor를 엄격히 따른다. 아래 "작성 순서"의 각 레이어 전환 시점에 TDD 사이클을 완주해야 한다.
+
+세 skill은 rigid 스킬이므로 요약하지 말고 정의된 절차 그대로 따른다. 프로젝트 고유 컨텍스트(테스트 프레임워크·네이밍 등)는 CLAUDE.md에서 가져온다.
 
 ---
 
 ## 입력
 
 1. **공통 설계** — Notion에서 **skills/common/notion-writer** 스킬로 읽거나, 직전 단계에서 전달
-2. **실패 테스트** — **skills/testing/tdd-guide** 스킬에서 작성한 Red 상태의 테스트
+2. **실패 테스트** — `superpowers:test-driven-development`의 Red 단계에서 작성한 실패 테스트
 3. **프로젝트 CLAUDE.md** — 아키텍처, 컨벤션, DI 방식, 파일 구조 정의
 
 CLAUDE.md가 없거나 관련 내용이 없으면 사용자에게 확인한다:
