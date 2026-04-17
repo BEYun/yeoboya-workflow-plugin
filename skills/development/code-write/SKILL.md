@@ -1,5 +1,6 @@
 ---
 name: code-write
+model: claude-sonnet-4-6
 description: 확정된 blueprint를 기반으로 플랫폼별 코드를 작성할 때 사용. superpowers의 brainstorming → writing-plans → test-driven-development 체인을 필수 선행으로 수행하고, 프로젝트 CLAUDE.md의 아키텍처와 컨벤션을 따른다. 작성 완료 후 code-review 스킬을 트리거한다. "코드 작성", "개발", "플랫폼 구현", "code-write"
 version: 0.1.0
 ---

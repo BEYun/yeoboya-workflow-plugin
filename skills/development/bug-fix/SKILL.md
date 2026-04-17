@@ -1,5 +1,6 @@
 ---
 name: bug-fix
+model: claude-sonnet-4-6
 description: 버그를 대화형으로 분석하고 수정할 때 사용. 정보 수집, 유형 분류, 원인 파트 특정 후 범위 내 버그는 TDD로 수정하고 범위 밖 버그는 원인 리포트를 Notion에 저장한다. superpowers:systematic-debugging 스킬을 활용한다. "버그 수정", "bug fix", "버그 분석", "크래시"
 version: 0.1.0
 ---

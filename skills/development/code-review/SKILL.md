@@ -1,5 +1,6 @@
 ---
 name: code-review
+model: claude-sonnet-4-6
 description: 구현된 코드를 공통 설계 및 CLAUDE.md 기반으로 4가지 관점에서 리뷰할 때 사용. Claude가 1차 리뷰 후 사용자가 최종 확인한다. superpowers:requesting-code-review 스킬을 활용한다. "코드리뷰", "code review", "리뷰 요청"
 version: 0.1.0
 ---

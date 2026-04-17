@@ -1,5 +1,6 @@
 ---
 name: dev-init
+model: claude-sonnet-4-6
 description: /dev 파이프라인 초기 설정. 서비스, 플랫폼, 작업자를 설정하고 Notion MCP 연결을 검증한다. 처음 /dev를 사용하기 전에 반드시 실행해야 한다. "/dev init", "초기 설정", "서비스 설정", "플랫폼 설정"
 argument-hint: (인자 없음)
 ---

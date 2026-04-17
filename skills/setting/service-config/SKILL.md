@@ -1,5 +1,6 @@
 ---
 name: service-config
+model: claude-sonnet-4-6
 description: 서비스별 Notion 페이지 ID 매핑 및 dev-config.json 설정을 조회하는 기반 스킬. 다른 스킬이 서비스 설정, Notion 페이지 ID, 작업번호 접두사, 설정 파일을 필요로 할 때 반드시 이 스킬을 참조해야 한다. "서비스 설정", "Notion 페이지", "dev-config", "서비스 매핑"
 version: 0.1.0
 ---
