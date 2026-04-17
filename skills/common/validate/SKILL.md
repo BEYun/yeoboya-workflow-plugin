@@ -1,5 +1,6 @@
 ---
 name: validate
+model: claude-haiku-4-5-20251001
 description: 각 워크플로우 단계의 산출물이 기대 구조를 따르는지 자동 검증한다. /dev 파이프라인이 생성 스킬 실행 직후 자동 호출한다. "validate", "검증", "산출물 검증"
 argument-hint: <stage> (1 | 2 | 3 | 7)
 ---

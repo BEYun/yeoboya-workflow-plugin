@@ -1,5 +1,6 @@
 ---
 name: notion-writer
+model: claude-haiku-4-5-20251001
 description: Notion에 산출물을 읽거나 쓸 때 반드시 사용하는 공통 스킬. 작업번호 페이지 관리, 서브페이지 생성/업데이트, 산출물 완료 여부 확인, QA 보드 저장 등 모든 Notion 작업은 이 스킬의 규칙을 따라야 한다. "Notion", "서브페이지", "산출물 저장", "페이지 생성"
 version: 0.1.0
 ---

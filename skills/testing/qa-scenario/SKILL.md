@@ -1,5 +1,6 @@
 ---
 name: qa-scenario
+model: claude-haiku-4-5-20251001
 description: QA용 테스트 시나리오를 기획서, 공통 설계, 구현 코드를 기반으로 작성하고 Notion QA 보드에 저장할 때 사용. 정상/엣지/회귀 3종 테스트 케이스를 도출한다. "QA 시나리오", "테스트 시나리오", "QA 시트", "통합 테스트"
 version: 0.1.0
 ---
