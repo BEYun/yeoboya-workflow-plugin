@@ -1,5 +1,6 @@
 ---
 name: ui-flow
+model: claude-opus-4-7
 description: 기획서를 기반으로 UI 흐름도를 Mermaid 다이어그램으로 작성하고 Notion에 저장할 때 사용. 화면 간 전환 관계, 엣지 케이스 분기, 상태별 화면을 정리한다. "UI 흐름도", "화면 흐름", "UI flow", "화면 전환"
 version: 0.1.0
 ---

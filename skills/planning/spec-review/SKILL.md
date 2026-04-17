@@ -1,5 +1,6 @@
 ---
 name: spec-review
+model: claude-opus-4-7
 description: 기획서 PDF를 4가지 관점(화면 흐름, 상태 정의, 엣지 케이스, 인터랙션)으로 검토하고 피드백 문서를 생성할 때 사용. 기획서를 받으면 반드시 이 스킬로 검토해야 한다. "기획서 검토", "spec review", "PDF 검토", "기획서 분석"
 version: 0.2.0
 ---

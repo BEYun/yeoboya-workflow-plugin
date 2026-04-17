@@ -1,5 +1,6 @@
 ---
 name: data-flow
+model: claude-opus-4-7
 description: 기획서를 기반으로 데이터 흐름도를 Mermaid 시퀀스 다이어그램으로 작성하고 Notion에 저장할 때 사용. 데이터 모델, API 엔드포인트, 파트별 책임을 정리한다. "데이터 흐름도", "data flow", "API 설계", "데이터 모델"
 version: 0.1.0
 ---
