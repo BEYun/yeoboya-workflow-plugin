@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const NOTION_STAGES = ['1', '2', '3', '7'];
+const NOTION_STAGES = ['2.1', '2.2', '3.1', '3.2', '3.3', '5.1'];
 
 function activeTaskPath(root) {
   return path.join(root, '.claude', 'active-task');
@@ -57,12 +57,22 @@ function writeState(root, task, state) {
 }
 
 function newEmptyState(task) {
-  const stages = {};
-  for (const n of NOTION_STAGES) {
-    stages[n] = { produced: false, validated: false, artifactPageId: null };
-  }
+  const stages = {
+    '1.1': { done: false, at: null },
+    '2.1': { done: false, validated: false, artifactPageId: null },
+    '2.2': { done: false, validated: false, artifactPageId: null },
+    '3.1': { done: false, validated: false, artifactPageId: null },
+    '3.2': { done: false, validated: false, artifactPageId: null },
+    '3.3': { done: false, validated: false, artifactPageId: null },
+    '4.1': { done: false, result: null },
+    '4.2': { done: false },
+    '4.3': { done: false },
+    '5.1': { done: false, validated: false, artifactPageId: null },
+  };
   return {
     task,
+    workType: null,
+    finalSpec: null,
     activeStage: null,
     activeSkill: null,
     stages,
