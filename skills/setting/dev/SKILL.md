@@ -1,13 +1,13 @@
 ---
 name: dev
 model: claude-sonnet-4-6
-description: /dev 개발 파이프라인 — 기획서 검토부터 QA 시나리오까지 전체 개발 워크플로우를 자동화하는 메인 진입점. 작업번호 기반으로 산출물 완료 상태를 자동 검증하고, 선행조건을 체크하여 단계별 스킬을 라우팅한다. "/dev", "개발 파이프라인", "작업 시작"
+description: /dev 개발 파이프라인 — 작업 정의부터 QA 시나리오까지 전체 개발 워크플로우를 계층 메뉴로 라우팅하는 메인 진입점. 작업번호 단위로 state.json을 관리하고 workType에 따라 스텝을 필터링한다. "/dev", "개발 파이프라인", "작업 시작"
 argument-hint: [작업번호] (선택)
 ---
 
 # dev
 
-/dev 파이프라인의 메인 진입점. 설정 확인 → 작업번호 입력 → 산출물 자동 검증 → 단계 메뉴 → 스킬 라우팅까지의 전체 흐름을 관리한다.
+/dev 파이프라인의 메인 진입점. 설정 확인 → 작업번호 입력 → workType 확보 → 계층 메뉴 → 스킬 라우팅 → 사후 validate의 흐름만 수행하는 **얇은 라우터**이다. 도메인 로직은 각 스킬이 소유한다.
 
 ---
 
@@ -25,7 +25,7 @@ argument-hint: [작업번호] (선택)
 
 ---
 
-## 2. 진입 메시지 및 작업번호
+## 2. 작업번호 확보
 
 ```
 [서비스] / [플랫폼] / [작업자] 님으로 진행합니다.
@@ -33,210 +33,180 @@ argument-hint: [작업번호] (선택)
 작업번호를 입력해주세요. (예: DCL-1351)
 ```
 
-argument로 작업번호가 전달된 경우 질문을 생략한다.
-작업번호 형식: 영문대문자-숫자 (예: `DCL-1351`, `YBY-42`)
+argument로 작업번호가 전달된 경우 질문을 생략한다. 형식: 영문대문자-숫자.
 
-작업번호는 이후 모든 스킬에 컨텍스트로 전달한다.
+### state.json 초기화 (신 스키마만 지원)
 
-### 상태 파일 초기화
-
-작업번호 입력 후:
-
-1. `.claude/active-task` 파일을 입력된 작업번호로 갱신 (atomic write).
-2. `.dev-work/<작업번호>/` 디렉토리가 없으면 생성.
-3. `.dev-work/<작업번호>/state.json`이 없으면 아래 초기 구조로 생성:
-   ```json
-   {
-     "task": "<작업번호>",
-     "activeStage": null,
-     "activeSkill": null,
-     "stages": {
-       "1": { "produced": false, "validated": false, "artifactPageId": null },
-       "2": { "produced": false, "validated": false, "artifactPageId": null },
-       "3": { "produced": false, "validated": false, "artifactPageId": null },
-       "7": { "produced": false, "validated": false, "artifactPageId": null }
-     },
-     "lastUpdated": "<ISO 타임스탬프>"
-   }
-   ```
-4. 이미 존재하면 그대로 로드(작업 재개). 기존 state를 덮어쓰지 않는다.
+1. `.claude/active-task`를 입력값으로 원자적 갱신
+2. `.dev-work/<작업번호>/` 없으면 생성
+3. `state.json`이 없으면 `hooks/lib/state.js`의 `newEmptyState(task)` 구조로 생성
+4. 이미 있으면 그대로 로드 (기존 state 덮어쓰지 않음)
 
 ---
 
-## 3. 산출물 기반 자동 검증
+## 3. workType 확보
 
-작업번호 입력 후 **모든 단계의 완료 상태**를 한번에 확인한다.
+`state.workType`이 `null`이면 곧바로 `skills/planning/work-define` 스킬을 호출하여 workType을 채운다. 완료 후 state를 다시 로드하여 이어서 진행.
 
-### Notion 검증 (skills/common/notion-writer 스킬 사용)
-
-작업번호 페이지 하위 서브페이지 존재 여부로 확인:
-
-| 단계 | 확인할 서브페이지 |
-|------|-----------------|
-| 1. 기획서 검토 | "기획서 검토" (정책서/설계서 페이지 > 작업번호) |
-| 2. UI 흐름도 | "UI 흐름도" (정책서/설계서 페이지 > 작업번호) |
-| 3. 데이터 흐름도 | "데이터 흐름도" (정책서/설계서 페이지 > 작업번호) |
-| 7. 테스트 시나리오 | "QA 시트" (QA 보드 페이지 > 작업번호) |
-
-### state.json 우선 조회
-
-Notion 조회 전에 `.dev-work/<작업번호>/state.json`의 `stages[n].validated`를 먼저 읽는다:
-
-- `validated=true` → ✓ 완료로 간주, Notion 재조회 생략
-- `validated=false` 이지만 `produced=true` → 이전 검증 실패 또는 재작업 대기. ⚠로 표시
-- `validated=false` 이고 `produced=false` → 미완료로 표시
-- `validated=null` → "검증 불가(수동 확인됨)" 상태로 ⚠ 표시
-
-state.json에 없는 작업번호이거나 파일 손상 시, 기존 Notion 서브페이지 존재 조회로 fallback.
-
-### Git 검증
-
-```bash
-git log --grep='\[작업번호\]'
-```
-
-커밋이 존재하면 개발 단계(4/5/6) 완료로 판단.
+`state.workType`이 이미 설정되어 있으면 이 단계 스킵.
 
 ---
 
-## 4. 단계 메뉴 표시
+## 4. 완료 상태 조회
 
-검증 결과를 반영하여 메뉴를 표시한다:
+Notion 산출물 스텝(`2.1, 2.2, 3.1, 3.2, 3.3, 5.1`)은 다음 순서로 상태를 판정:
 
-```
-── 기획 단계 ──
-✓ 1. 기획서 검토
-✓ 2. UI 흐름도 작성
-  3. 데이터 흐름도 작성
+1. `state.stages["N.M"].validated === true` → ✓ 완료
+2. `validated === false && done === true` → ⚠ (이전 검증 실패 또는 재작업 대기)
+3. `validated === false && done === false` → 미완료
+4. `validated === null` → ⚠ (수동 확인됨, 검증 불가)
 
-── 개발 단계 ──
-  4. 기능 신규 개발
-  5. 기능 변경 및 고도화
-  6. 버그 수정
+메타/개발/판정 스텝(`1.1, 4.1, 4.2, 4.3`)은 `done` 필드만으로 판정:
+- `done === true` → ✓
+- `done === false` → 미완료
 
-── 테스트 단계 ──
-  7. 테스트 시나리오 작성 (QA용)
+### Git 사후 지표 (4.2/4.3 경고 리포트에만 사용)
 
-번호를 선택하세요.
-```
-
-상태 표시:
-- `✓` — 완료
-- `⚠` — 확인 필요 (재작업으로 후행 단계 영향)
-- (빈칸) — 미완료
+`git log --grep='\[작업번호\]'` 커밋 유무는 메뉴 상태 판정에는 쓰지 않고, 사후 처리의 경고 리포트에서만 참조한다.
 
 ---
 
-## 5. 선행조건 체인
+## 5. workType 기반 메뉴 필터
 
-| 선택 | 선행조건 |
-|------|---------|
-| 1 | 없음 |
-| 2 | 1번 완료 |
-| 3 | 1번 완료 |
-| 4 | 1, 2, 3번 완료 |
-| 5 | 1, 2, 3번 완료 |
-| 6 | 1번 완료 (긴급 시 스킵 가능 — 사용자에게 확인) |
-| 7 | 4번 또는 5번 완료 |
+숨김 규칙:
 
-미충족 시:
+| workType  | 숨기는 스텝                          |
+| --------- | ------------------------------------ |
+| `new`     | (없음)                               |
+| `change`  | (없음)                               |
+| `bugfix`  | `2.2`, `3.1`, `3.2`, `3.3`, `4.1`    |
+
+숨긴 스텝은 선행조건 검사에서 "자동 충족"으로 간주한다.
+
+---
+
+## 6. 메뉴 표시
+
 ```
-"[선택한 단계]를 진행하려면 [미충족 단계 목록]이 완료되어야 합니다.
-어떤 단계부터 시작하시겠습니까?"
-→ 미완료 단계 목록만 보여준다
+[<작업번호> · <workType 한글 라벨>]
+
+── 1. 작업 정의 ──
+✓ 1.1 작업 종류 선택
+
+── 2. 기획 검토 ──
+  2.1 기획서 검토
+  2.2 최종 기획서 확인           ← bugfix면 표시 안 함
+
+── 3. 설계 ──                    ← bugfix면 대분류 전체 숨김
+  3.1 UI 흐름도
+  3.2 데이터 흐름도
+  3.3 tech-spec (기술 설계)
+
+── 4. 개발 ──
+  4.1 디자인 작업 유무 확인      ← bugfix면 표시 안 함
+  4.2 코드 작성                  ← bugfix면 "4.2 버그 수정"으로 라벨 변경
+  4.3 코드 리뷰
+
+── 5. 테스트 ──
+  5.1 QA 시나리오
+
+번호를 선택하세요 (예: 3.1)
+```
+
+상태 마커: `✓` 완료, `⚠` 확인 필요, (빈칸) 미완료.
+
+---
+
+## 7. 선행조건
+
+숨김 스텝은 자동 충족. 아래 표 중 "숨김"이 된 경우 다음 visible 스텝에서 해당 선행이 우회된다.
+
+| 스텝 | 선행      |
+| ---- | --------- |
+| 1.1  | 없음      |
+| 2.1  | 1.1       |
+| 2.2  | 2.1       |
+| 3.1  | 2.2       |
+| 3.2  | 2.2       |
+| 3.3  | 3.1, 3.2  |
+| 4.1  | 3.3       |
+| 4.2  | 4.1       |
+| 4.3  | 4.2       |
+| 5.1  | 4.3       |
+
+선행 미충족 시:
+```
+[선택한 스텝]을 진행하려면 [미충족 스텝 목록]이 완료되어야 합니다.
+어떤 단계부터 시작하시겠습니까?
+→ 미완료 스텝 목록만 표시
 ```
 
 ---
 
-## 6. 재작업 플로우
+## 8. 재작업 영향 전파
 
-이미 완료된 단계를 다시 선택한 경우:
+완료된 스텝을 다시 선택하면:
 
 ```
-"[단계명]이 이미 완료되어 있습니다. [산출물명]이 수정되었나요?"
+[스텝명]이 이미 완료되어 있습니다. [산출물명]이 수정되었나요?
 → "네" → 해당 스킬 재실행
-→ "아니요" → 메뉴로 복귀
+→ "아니요" → 메뉴 복귀
 ```
 
-재작업 완료 후 후행 단계에 영향 안내:
+재작업 완료 후 후행 영향 안내:
 
-```
-"[단계명]이 변경되었습니다. 다음 산출물도 업데이트가 필요할 수 있습니다:"
-"  - [후행 단계] (✓ 완료 → ⚠ 확인 필요)"
-"어떤 단계를 업데이트하시겠습니까?"
-```
+| 재작업 스텝 | ⚠ 후행 스텝                      |
+| ----------- | -------------------------------- |
+| 2.1         | 2.2, 3.1, 3.2, 3.3, 4.2, 4.3, 5.1 |
+| 2.2         | 3.1, 3.2, 3.3, 4.2, 4.3, 5.1      |
+| 3.1         | 3.3, 4.2, 4.3                     |
+| 3.2         | 3.3, 4.2, 4.3                     |
+| 3.3         | 4.2, 4.3                          |
+| 4.2         | 4.3, 5.1                          |
 
-### 영향 전파 규칙
-
-| 재작업 단계 | ⚠ 확인 필요로 표시되는 단계 |
-|------------|--------------------------|
-| 1. 기획서 검토 | 2, 3, 4, 5, 7 |
-| 2. UI 흐름도 | 4, 5 |
-| 3. 데이터 흐름도 | 4, 5 |
-| 4/5. 기능 개발/변경 | 7 |
-
-### state.json 반영
-
-재작업이 validate 통과 시, 표의 ⚠ 대상 단계들 중 Notion 단계(1,2,3,7)에 대해 `state.json`의 `stages[n].validated`를 `false`로 되돌린다. 개발 단계(4,5)는 `state.json`에 필드가 없으므로 메뉴 표시에서만 ⚠ 처리.
+재작업이 validate 통과 시 후행 Notion 스텝의 `validated=false`로 되돌린다. 개발 스텝(4.2, 4.3)은 메뉴 표시에서만 ⚠ 처리.
 
 ---
 
-## 7. 스킬 라우팅
+## 9. 스킬 라우팅
 
-| 선택 | 호출 스킬 |
-|------|----------|
-| 1 | `skills/planning/spec-review` |
-| 2 | `skills/blueprint/ui-flow` |
-| 3 | `skills/blueprint/data-flow` |
-| 4 | `skills/blueprint/tech-spec` → `skills/development/code-write` → `skills/development/code-review` (순차 실행) |
-| 5 | `skills/blueprint/tech-spec` (변경 모드) → `skills/development/code-write` → `skills/development/code-review` (순차 실행) |
-| 6 | `skills/development/bug-fix` (내부에서 skills/development/code-review 호출) |
-| 7 | `skills/testing/qa-scenario` |
+선택된 스텝에 대해 `state.activeStage = "N.M"`, `state.activeSkill = "<경로>"` 로 갱신한 뒤 스킬을 호출한다.
 
-4번과 5번은 4개 스킬을 순차 실행한다. 각 스킬이 완료된 후 다음으로 자동 진행한다.
+| 스텝 | 호출 스킬                                                | 사후 validate |
+| ---- | -------------------------------------------------------- | ------------- |
+| 1.1  | `skills/planning/work-define`                            | 없음          |
+| 2.1  | `skills/planning/spec-review`                            | stage=2.1     |
+| 2.2  | `skills/planning/spec-finalize`                          | stage=2.2     |
+| 3.1  | `skills/blueprint/ui-flow`                               | stage=3.1     |
+| 3.2  | `skills/blueprint/data-flow`                             | stage=3.2     |
+| 3.3  | `skills/blueprint/tech-spec`                             | stage=3.3     |
+| 4.1  | `skills/development/design-check`                        | 없음          |
+| 4.2  | workType이 `bugfix`면 `skills/development/bug-fix`, 아니면 `skills/development/code-write` | 경고 리포트 |
+| 4.3  | `skills/development/code-review`                         | 경고 리포트   |
+| 5.1  | `skills/testing/qa-scenario`                             | stage=5.1     |
 
-### 라우팅 직전 상태 기록
+### 사후 처리
 
-선택된 단계에 대해 `.dev-work/<작업번호>/state.json`을 아래처럼 갱신:
-
-- `activeStage` = 선택된 단계 번호
-- `activeSkill` = 라우팅 대상 스킬 경로 (4/5번처럼 다중이면 첫 스킬)
-
-이 기록이 있어야 `hooks/stage-guard.js`가 해당 단계의 Notion 쓰기를 허용한다.
-
-### 라우팅 직후 자동 검증
-
-생성 스킬이 완료되면 단계별로 아래 자동 조치:
-
-- 1번: `skills/common/validate` 를 `stage=1`로 호출
-- 2번: `skills/common/validate` 를 `stage=2`로 호출
-- 3번: `skills/common/validate` 를 `stage=3`로 호출
-- 4/5번: 개발 단계. code-review 완료 후 state 정리만(검증 스킬 호출 안 함). 경고 리포트 출력:
-  - `git log --grep='[작업번호]'` 결과
+- validate가 지정된 스텝: `skills/common/validate` 호출 (`stage=N.M`)
+- 4.2/4.3 경고 리포트 — 아래 조건 충족 여부를 점검해 미충족 항목을 콘솔에 출력:
+  - `git log --grep='[<작업번호>]'` 결과 존재
   - 변경 파일에 테스트 파일 포함 여부
-  - code-review 산출물 존재 여부
-  하나라도 없으면 `[작업번호] [단계]단계 검증 경고: ...` 콘솔 출력.
-- 6번: 4/5와 동일한 경고 리포트
-- 7번: `skills/common/validate` 를 `stage=7`로 호출
+  - code-review 산출물(경로는 code-review 스킬 정의에 따름) 존재 여부
+- 어떤 경로로든 완료 후 `activeStage`, `activeSkill`을 `null`로 복원
 
-검증 결과에 따라 `state.json`의 `stages[n].validated`가 갱신된다. 어떤 경로로든 완료 후 `activeStage` / `activeSkill`을 `null`로 초기화.
+### 각 스킬에 전달할 컨텍스트
 
-각 스킬에 전달해야 하는 컨텍스트:
-- **작업번호** — 모든 스킬에 전달
-- **서비스/플랫폼/작업자** — dev-config.json에서 읽은 값
-- **신규/변경 구분** — 4번이면 신규, 5번이면 변경 (skills/blueprint/tech-spec에 전달)
-
-### artifactPageId 캐싱
-
-validate 스킬이 notion-writer로 산출물 페이지를 찾을 때 page_id를 알아내므로, validate가 이 값을 `state.json`의 `stages[n].artifactPageId`에 기록하도록 내부적으로 위임한다. `/dev`는 이 필드를 직접 관리하지 않는다.
+- 작업번호 (모든 스킬)
+- 서비스/플랫폼/작업자 (dev-config.json)
+- workType (모든 스킬이 `.dev-work/<작업번호>/state.json`에서 직접 읽어도 됨)
 
 ---
 
-## 8. 단계 완료 후
+## 10. 단계 완료 후
 
 ```
-"[단계명] 완료!
-다른 단계를 진행하시겠습니까?"
-→ "네" → 산출물 검증 갱신 후 메뉴로 복귀
+[스텝명] 완료!
+다른 단계를 진행하시겠습니까?
+→ "네" → 4로 복귀
 → "아니요" → 종료
 ```
