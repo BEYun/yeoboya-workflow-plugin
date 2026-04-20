@@ -35,6 +35,19 @@ CLAUDE.md가 없거나 관련 내용이 없으면 사용자에게 확인한다:
 (예: Clean Architecture + MVVM, Needle DI 등)
 ```
 
+### 디자인 컨텍스트 (design-check 결과)
+
+`state.stages["4.1"].result`를 읽어 디자인 소스 전략을 확인한다. 값에 따라 참조 방식이 달라진다.
+
+| strategyId              | tokenized | 참조 방식                                                     |
+| ----------------------- | --------- | ------------------------------------------------------------- |
+| `zeplin-manual`         | false     | `designSource` Zeplin 링크를 열어 치수·색상·에셋을 수동 확인  |
+| `figma-screenshot`      | false     | `designSource` 스크린샷 파일을 로드하여 비전 기반 해석        |
+| `figma-mcp-tokenized`   | true      | Figma MCP로 노드 조회 + 서비스 디자인 토큰 매핑 사용          |
+| `skip-bugfix`           | -         | 버그 수정 — 디자인 소스 참조 없이 기존 컨벤션으로 구현        |
+
+`state.stages["4.1"].done === false`이면 "디자인 체크가 아직 완료되지 않았습니다. /dev에서 4.1 단계를 먼저 완료해주세요." 안내 후 종료.
+
 ---
 
 ## 구현 원칙

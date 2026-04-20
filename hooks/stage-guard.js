@@ -13,10 +13,12 @@ const NOTION_WRITE_TOOLS = new Set([
 
 // Page title → expected stage number (string keys match state.json)
 const TITLE_TO_STAGE = new Map([
-  ['기획서 검토', '1'],
-  ['UI 흐름도', '2'],
-  ['데이터 흐름도', '3'],
-  ['QA 시트', '7'],
+  ['기획서 검토', '2.1'],
+  ['최종 기획서', '2.2'],
+  ['UI 흐름도', '3.1'],
+  ['데이터 흐름도', '3.2'],
+  ['기술 설계', '3.3'],
+  ['QA 시트', '5.1'],
 ]);
 
 function normalizeTitle(raw) {
@@ -81,7 +83,9 @@ function block(msg) {
   const bypass = process.env.DEV_GUARD_BYPASS === '1';
 
   if (activeStage === stageForTitle) {
-    state.stages[stageForTitle].produced = true;
+    // Notion 산출물 스텝은 모두 done/validated/artifactPageId 구조
+    if (!state.stages[stageForTitle]) state.stages[stageForTitle] = { done: false, validated: false, artifactPageId: null };
+    state.stages[stageForTitle].done = true;
     writeState(root, task, state);
     return allow();
   }
