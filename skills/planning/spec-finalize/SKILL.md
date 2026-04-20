@@ -12,7 +12,7 @@ description: 기획회의 이후 확정된 최종 기획서를 제출받아 Noti
 
 ## 선행조건
 
-- `stages["2.1"].validated === true` (기획서 검토 완료)
+- `stages["2.1"].done === true` (기획서 검토 완료 — validate 통과 또는 수동 확인)
 - `.claude/active-task`의 작업번호가 유효함
 
 ---
@@ -62,7 +62,8 @@ notion-writer로부터 생성된 페이지의 `page_id`를 확보한다.
 `.claude/active-task`에서 작업번호를 읽어 `.dev-work/<작업번호>/state.json`을 아래와 같이 갱신한다. 쓰기는 `hooks/lib/state.js`의 `readState`/`writeState` 헬퍼(또는 동등한 임시 파일 + rename 방식)로 원자적으로 처리한다.
 
 - `finalSpec = { pageId: <위에서 얻은 page_id>, uploadedAt: new Date().toISOString() 포맷 }`
-- `stages["2.2"] = { done: true, validated: true, artifactPageId: <page_id> }`
+- `stages["2.2"] = { done: true, validated: false, artifactPageId: <page_id> }`
+- `validated`는 /dev 라우터가 이 스킬 직후 자동 호출하는 `skills/common/validate` 가 기록한다. 이 스킬은 `done`과 `artifactPageId`만 설정한다.
 
 ---
 
