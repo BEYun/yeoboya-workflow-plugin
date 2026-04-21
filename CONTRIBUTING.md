@@ -39,6 +39,36 @@ docs/superpowers/                   # 스펙(specs/) 및 구현 계획(plans/)
 .claude/dev-config.json             # 서비스/플랫폼/작업자 설정 (gitignored)
 ```
 
+## 외부 의존성
+
+### Notion MCP
+
+훅과 스킬이 Notion MCP 서버의 아래 툴을 사용한다. MCP 서버 ID는 환경에 따라 다를 수 있으며, hooks.json의 `matcher`가 실제 ID와 일치해야 한다.
+
+| 툴 | 사용 위치 | 용도 |
+| -- | --------- | ---- |
+| `notion-create-pages` | hooks (stage-guard, validate-guard, pageid-capture), notion-writer | 산출물 페이지 신규 생성 |
+| `notion-update-page` | hooks (stage-guard, validate-guard, pageid-capture), notion-writer | 산출물 페이지 수정 |
+| `notion-fetch` | notion-writer, dev (공유 단계 확인) | 기존 페이지 내용 조회 |
+| `notion-search` | dev (공유 단계 Notion 확인) | 작업번호 기반 페이지 탐색 |
+
+> **MCP ID 확인**: `hooks/hooks.json`의 `matcher` 값(`mcp__claude_ai_Notion__notion-create-pages` 등)이 실제 연결된 Notion MCP 서버 ID와 일치해야 훅이 동작한다. `/mcp`로 확인한 실제 ID에 맞게 수정한다.
+
+### superpowers 플러그인
+
+개발 단계 스킬이 superpowers 스킬을 필수 선행으로 호출한다. superpowers 플러그인이 설치되어 있지 않으면 해당 스킬 호출 시 오류가 발생한다.
+
+| superpowers 스킬 | 호출하는 스킬 | 용도 |
+| --------------- | ------------- | ---- |
+| `brainstorming` | code-write | 코드 작성 전 세부 설계 재점검 및 활용 스킬 결정 |
+| `writing-plans` | code-write | brainstorming 결과를 plan으로 구체화 |
+| `test-driven-development` | code-write, bug-fix | Red → Green → Refactor TDD 사이클 |
+| `systematic-debugging` | bug-fix | 버그 원인 체계적 분석 |
+| `requesting-code-review` | code-review | 리뷰 리거·체크리스트 확보 |
+| `verification-before-completion` | code-write, bug-fix | "완료" 주장 전 검증 게이트 |
+
+선택적으로 brainstorming 시 `subagent-driven-development`, `dispatching-parallel-agents` 등도 활용할 수 있다.
+
 ## 스킬 작성 규칙
 
 모든 스킬은 `SKILL.md`에 프론트매터를 가진다:
