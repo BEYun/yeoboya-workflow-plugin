@@ -125,5 +125,5 @@ sequenceDiagram
 
 ---
 
-> 이 스킬의 산출물은 `skills/common/validate` 규칙에 따라 검증됩니다.
-> 출력 포맷 변경 시 해당 규칙 블록을 동기화해야 합니다.
+> 이 스킬의 산출물은 `validate-guard.js`(PreToolUse Hook)가 자동 검증합니다.
+> 출력 포맷 변경 시 해당 훅의 3.2 규칙 블록을 동기화해야 합니다.

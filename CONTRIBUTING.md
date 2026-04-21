@@ -38,10 +38,11 @@ argument-hint: <선택>
 ## 워크플로우 아키텍처
 
 ```
-/dev → 생성 스킬 → skills/common/validate → state.json 업데이트
-                     ▲
-                     │
-            hooks/stage-guard.js (PreToolUse: Notion 쓰기 가로채기)
+/dev → 생성 스킬 → state.json 업데이트
+          ▲                ▲
+          │                │
+  hooks/stage-guard.js   hooks/validate-guard.js   hooks/pageid-capture.js
+  (PreToolUse)           (PreToolUse)               (PostToolUse)
 ```
 
 ### 상태 모델
@@ -74,14 +75,14 @@ argument-hint: <선택>
 4. 일치하면 허용하고 `stages[stage].produced=true`로 업데이트.
 5. `DEV_GUARD_BYPASS=1` 환경변수가 있으면 경고만 찍고 통과.
 
-### 검증 스킬
+### 검증 훅
 
-`skills/common/validate/SKILL.md`에 단계별 구조 규칙이 중앙화되어 있다. `/dev`가 생성 스킬 실행 직후 자동 호출한다. 검증 결과는 `state.json`의 `validated` 필드에 반영된다.
+단계별 산출물 검증은 `hooks/validate-guard.js`(PreToolUse)가 자동 처리한다. Notion 쓰기 직전에 포맷 규칙을 확인하고 미충족 시 저장을 차단한다. 검증 통과 후 `hooks/pageid-capture.js`(PostToolUse)가 반환된 `page_id`를 `state.json`의 `validated` 및 `artifactPageId` 필드에 반영한다.
 
 ## 새 단계 스킬 추가 체크리스트
 
 - [ ] `skills/<category>/<name>/SKILL.md` 작성 (프론트매터 포함)
-- [ ] `skills/common/validate/SKILL.md`에 새 단계의 검증 규칙 블록 추가
+- [ ] `hooks/validate-guard.js`에 새 단계의 검증 규칙 블록 추가
 - [ ] `skills/setting/dev/SKILL.md` 수정:
   - [ ] 단계 메뉴에 항목 추가
   - [ ] 선행조건 테이블 업데이트
@@ -94,7 +95,7 @@ argument-hint: <선택>
 
 ## 검증 규칙 수정 가이드
 
-`skills/common/validate/SKILL.md`의 "단계별 규칙" 섹션을 직접 편집한다. 기존 작업번호의 `state.json`에는 이전 규칙 기준의 `validated=true`가 남아 있을 수 있으므로, 호환성을 깨는 규칙 변경 시 해당 작업들을 재검증해야 함을 PR 설명에 명시한다.
+`hooks/validate-guard.js`의 단계별 규칙 블록을 직접 편집한다. 기존 작업번호의 `state.json`에는 이전 규칙 기준의 `validated=true`가 남아 있을 수 있으므로, 호환성을 깨는 규칙 변경 시 해당 작업들을 재검증해야 함을 PR 설명에 명시한다.
 
 ## 테스트
 
