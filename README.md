@@ -33,6 +33,11 @@ Notion MCP 서버가 연결되어 있어야 한다. 산출물(최종 기획서, 
 | `requesting-code-review` | code-review | 리뷰 체크리스트 확보 |
 | `verification-before-completion` | code-write, bug-fix | "완료" 주장 전 검증 게이트 |
 
+> **`.gitignore` 권고**: superpowers 플러그인은 런타임 중 프로젝트의 `docs/superpowers/` 디렉토리에 스펙·플랜 파일을 생성합니다. 이 디렉토리를 커밋하지 않으려면 프로젝트 `.gitignore`에 아래를 추가하세요.
+> ```
+> docs/superpowers/
+> ```
+
 ## 설치
 
 Claude Code에서 플러그인을 추가한다. Notion MCP와 Figma 또는 Zeplin MCP 연결이 사전에 필요하다.

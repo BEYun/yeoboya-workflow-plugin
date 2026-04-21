@@ -69,6 +69,8 @@ docs/superpowers/                   # 스펙(specs/) 및 구현 계획(plans/)
 
 선택적으로 brainstorming 시 `subagent-driven-development`, `dispatching-parallel-agents` 등도 활용할 수 있다.
 
+> **프로젝트 설정 권고**: superpowers 플러그인은 런타임 중 `docs/superpowers/` 디렉토리에 스펙·플랜 파일을 생성한다. 이 디렉토리는 커밋하지 않도록 프로젝트의 `.gitignore`에 `docs/superpowers/`(또는 `docs/`)를 추가할 것을 권장한다. 이 플러그인 저장소의 `.gitignore`는 이미 `docs/`를 제외하고 있다.
+
 ## 스킬 작성 규칙
 
 모든 스킬은 `SKILL.md`에 프론트매터를 가진다:
