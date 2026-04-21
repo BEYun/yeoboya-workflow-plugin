@@ -19,14 +19,13 @@ description: 기획회의 이후 확정된 최종 기획서를 제출받아 Noti
 
 ## 입력 수집
 
-사용자에게 다음을 차례로 요청한다.
+사용자에게 최종 기획서를 요청한다:
 
-1. 최종 기획서 제출: "최종 기획서 파일 경로 또는 접근 링크를 제공해주세요."
-   - 파일 경로(PDF 등) 또는 URL 둘 다 허용
-2. 초안 대비 변경점 요약 (선택):
-   ```
-   기획회의에서 변경된 주요 항목을 3~5줄로 요약해주세요. 변경이 없다면 "없음"이라고 답해주세요.
-   ```
+```
+최종 기획서 파일 경로 또는 접근 링크를 제공해주세요.
+```
+
+파일 경로(PDF 등) 또는 URL 둘 다 허용한다. 변경이 있는 경우 사용자가 변경된 파일을 직접 제공하므로 별도로 변경점을 묻지 않는다.
 
 제출이 없거나 사용자가 "나중에"로 응답하면 state 변경 없이 종료하고 다음 안내를 출력:
 ```
@@ -48,9 +47,6 @@ description: 기획회의 이후 확정된 최종 기획서를 제출받아 Noti
 ### 원본 자료
 - <파일명 또는 링크>
   (PDF라면 파일 첨부, URL이라면 링크 임베드)
-
-### 초안 대비 변경점
-<사용자가 제공한 요약. "없음"이면 "변경 없음"으로 기록>
 ```
 
 notion-writer로부터 생성된 페이지의 `page_id`를 확보한다.
@@ -62,8 +58,9 @@ notion-writer로부터 생성된 페이지의 `page_id`를 확보한다.
 `.claude/active-task`에서 작업번호를 읽어 `.dev-work/<작업번호>/state.json`을 아래와 같이 갱신한다. 쓰기는 `hooks/lib/state.js`의 `readState`/`writeState` 헬퍼(또는 동등한 임시 파일 + rename 방식)로 원자적으로 처리한다.
 
 - `finalSpec = { pageId: <위에서 얻은 page_id>, uploadedAt: new Date().toISOString() 포맷 }`
-- `stages["2.2"] = { done: true, validated: false, artifactPageId: <page_id> }`
-- `validated`는 /dev 라우터가 이 스킬 직후 자동 호출하는 `skills/common/validate` 가 기록한다. 이 스킬은 `done`과 `artifactPageId`만 설정한다.
+- `finalSpec = { pageId: <page_id>, uploadedAt: new Date().toISOString() 포맷 }`
+- `stages["2.2"].done = true`
+- `validated`와 `artifactPageId`는 Notion 저장 시 `validate-guard.js`(PreToolUse)와 `pageid-capture.js`(PostToolUse) Hook이 자동 기록한다. 이 스킬은 `done`과 `finalSpec`만 설정한다.
 
 ---
 
