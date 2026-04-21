@@ -304,6 +304,16 @@
       padding: 2px 6px; border-radius: 4px;
     }
     .skill-cat { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .model-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 600;
+      padding: 2px 8px; border-radius: 5px; white-space: nowrap; display: inline-block;
+    }
+    .m-opus   { background: rgba(120,80,200,0.12); color: #7850c8; border: 1px solid rgba(120,80,200,0.28); }
+    .m-sonnet { background: rgba(7,113,135,0.12);  color: #077187; border: 1px solid rgba(7,113,135,0.28); }
+    .m-haiku  { background: rgba(116,165,127,0.12); color: #4a8a5a; border: 1px solid rgba(116,165,127,0.28); }
+    [data-theme="dark"] .m-opus   { color: #b090f0; border-color: rgba(176,144,240,0.3); }
+    [data-theme="dark"] .m-sonnet { color: #4aaec4; border-color: rgba(74,174,196,0.3); }
+    [data-theme="dark"] .m-haiku  { color: #9ece9a; border-color: rgba(158,206,154,0.3); }
 
     /* Hooks */
     .hooks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -909,103 +919,119 @@
         <div class="tbl-wrap">
           <table>
             <thead>
-              <tr><th>스킬</th><th>카테고리</th><th>단계</th><th>기능 요약</th></tr>
+              <tr><th>스킬</th><th>카테고리</th><th>단계</th><th>사용 모델</th><th>기능 요약</th></tr>
             </thead>
             <tbody>
               <tr>
                 <td><span class="skill-path">dev</span></td>
                 <td><div class="skill-cat">setting</div></td>
                 <td>—</td>
+                <td><span class="model-badge m-sonnet">Sonnet 4.6</span></td>
                 <td>workType·진행 단계에 따라 스킬을 라우팅하는 메인 오케스트레이터</td>
               </tr>
               <tr>
                 <td><span class="skill-path">dev-init</span></td>
                 <td><div class="skill-cat">setting</div></td>
                 <td>—</td>
+                <td><span class="model-badge m-sonnet">Sonnet 4.6</span></td>
                 <td>최초 실행 시 서비스·플랫폼·작업자·MCP 연결 정보를 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">dev-config.json</code>에 저장</td>
               </tr>
               <tr>
                 <td><span class="skill-path">service-config</span></td>
                 <td><div class="skill-cat">setting</div></td>
                 <td>—</td>
+                <td><span class="model-badge m-sonnet">Sonnet 4.6</span></td>
                 <td>서비스별 Notion 페이지 ID 매핑 설정</td>
               </tr>
               <tr>
                 <td><span class="skill-path">work-define</span></td>
                 <td><div class="skill-cat">planning</div></td>
                 <td>1.1</td>
+                <td><span class="model-badge m-haiku">Haiku 4.5</span></td>
                 <td>작업 종류(new / change / bugfix) 선택 후 state.json에 workType 기록</td>
               </tr>
               <tr>
                 <td><span class="skill-path">spec-review</span></td>
                 <td><div class="skill-cat">planning</div></td>
                 <td>2.1</td>
+                <td><span class="model-badge m-opus">Opus 4.7</span></td>
                 <td>Notion 기획서를 조회해 검토하고 피드백을 정리</td>
               </tr>
               <tr>
                 <td><span class="skill-path">spec-finalize</span></td>
                 <td><div class="skill-cat">planning</div></td>
                 <td>2.2</td>
+                <td><span class="model-badge m-sonnet">Sonnet 4.6</span></td>
                 <td>검토 결과를 반영한 최종 기획서를 Notion에 업로드하고 page_id를 state에 기록</td>
               </tr>
               <tr>
                 <td><span class="skill-path">ui-flow</span></td>
                 <td><div class="skill-cat">blueprint</div></td>
                 <td>3.1</td>
+                <td><span class="model-badge m-opus">Opus 4.7</span></td>
                 <td>화면 전환·사용자 행동 흐름을 정리한 UI 흐름도 작성</td>
               </tr>
               <tr>
                 <td><span class="skill-path">data-flow</span></td>
                 <td><div class="skill-cat">blueprint</div></td>
                 <td>3.2</td>
+                <td><span class="model-badge m-opus">Opus 4.7</span></td>
                 <td>API 호출·데이터 변환 흐름을 정리한 데이터 흐름도 작성</td>
               </tr>
               <tr>
                 <td><span class="skill-path">tech-spec</span></td>
                 <td><div class="skill-cat">blueprint</div></td>
                 <td>3.3</td>
+                <td><span class="model-badge m-opus">Opus 4.7</span></td>
                 <td>UI·데이터 흐름도를 바탕으로 기술 구현 명세서 작성</td>
               </tr>
               <tr>
                 <td><span class="skill-path">design-check</span></td>
                 <td><div class="skill-cat">development</div></td>
                 <td>4.1</td>
+                <td><span class="model-badge m-sonnet">Sonnet 4.6</span></td>
                 <td>Figma/Zeplin 등 디자인 시스템 연결 여부 확인 후 state에 결과 기록</td>
               </tr>
               <tr>
                 <td><span class="skill-path">code-write</span></td>
                 <td><div class="skill-cat">development</div></td>
                 <td>4.2</td>
+                <td><span class="model-badge m-sonnet">Sonnet 4.6</span></td>
                 <td>brainstorming → writing-plans → TDD 파이프라인을 선행 호출 후 코드 작성</td>
               </tr>
               <tr>
                 <td><span class="skill-path">code-review</span></td>
                 <td><div class="skill-cat">development</div></td>
                 <td>4.3</td>
+                <td><span class="model-badge m-sonnet">Sonnet 4.6</span></td>
                 <td>requesting-code-review 스킬을 선행 호출해 체계적인 리뷰 수행</td>
               </tr>
               <tr>
                 <td><span class="skill-path">bug-fix</span></td>
                 <td><div class="skill-cat">development</div></td>
                 <td>4.2 / 5.2</td>
+                <td><span class="model-badge m-sonnet">Sonnet 4.6</span></td>
                 <td>systematic-debugging으로 원인 분석 후 TDD 사이클로 버그 수정</td>
               </tr>
               <tr>
                 <td><span class="skill-path">qa-scenario</span></td>
                 <td><div class="skill-cat">testing</div></td>
                 <td>5.1</td>
+                <td><span class="model-badge m-haiku">Haiku 4.5</span></td>
                 <td>기술 설계·코드 리뷰 결과를 기반으로 QA 시트를 Notion에 작성</td>
               </tr>
               <tr>
                 <td><span class="skill-path">task-complete</span></td>
                 <td><div class="skill-cat">testing</div></td>
                 <td>5.3</td>
+                <td><span class="model-badge m-sonnet">Sonnet 4.6</span></td>
                 <td>전체 산출물 요약 리포트 생성 및 state.json 최종 완료 처리</td>
               </tr>
               <tr>
                 <td><span class="skill-path">notion-writer</span></td>
                 <td><div class="skill-cat">common</div></td>
                 <td>—</td>
+                <td><span class="model-badge m-haiku">Haiku 4.5</span></td>
                 <td>Notion MCP 툴 호출을 추상화한 공통 쓰기 유틸리티</td>
               </tr>
             </tbody>
