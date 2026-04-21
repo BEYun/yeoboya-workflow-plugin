@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>여보야 업무 파이프라인 플러그인 온보딩</title>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --c1: #074f57; --c2: #077187; --c3: #74a57f; --c4: #9ece9a; --c5: #e4c5af;
+      /* Light mode defaults */
+      --bg: #f5f2ee; --bg-surface: #ffffff; --bg-surface2: #eeebe6;
+      --sidebar-bg: #074f57; --sidebar-text: #e4c5af;
+      --sidebar-hover: rgba(228,197,175,0.12); --sidebar-active: rgba(228,197,175,0.22);
+      --text-primary: #1a2830; --text-secondary: #4a6068; --text-muted: #8a9aa0;
+      --border: #e0dbd4; --border-strong: #c8c2ba;
+      --header-bg: rgba(245,242,238,0.96);
+      --card-bg: #ffffff; --card-shadow: 0 1px 3px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.04);
+      --code-bg: #eceae5; --code-text: #074f57;
+      --tag-bg: rgba(7,113,135,0.1); --tag-text: #077187;
+      --info-bg: rgba(116,165,127,0.1); --info-border: #74a57f;
+      --accent: #077187; --accent-light: rgba(7,113,135,0.08);
+    }
+    [data-theme="dark"] {
+      --bg: #0c1419; --bg-surface: #111d24; --bg-surface2: #162028;
+      --sidebar-bg: #071014; --sidebar-text: #9ece9a;
+      --sidebar-hover: rgba(158,206,154,0.1); --sidebar-active: rgba(158,206,154,0.18);
+      --text-primary: #e4ddd5; --text-secondary: #8a9ea8; --text-muted: #5a6e78;
+      --border: #1e2d35; --border-strong: #2a3e48;
+      --header-bg: rgba(12,20,25,0.96);
+      --card-bg: #111d24; --card-shadow: 0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.2);
+      --code-bg: #0a1218; --code-text: #9ece9a;
+      --tag-bg: rgba(7,113,135,0.2); --tag-text: #74a57f;
+      --info-bg: rgba(116,165,127,0.08); --info-border: #74a57f;
+      --accent: #74a57f; --accent-light: rgba(116,165,127,0.12);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14px; line-height: 1.7;
+      color: var(--text-primary); background: var(--bg);
+    }
+
+    /* Header */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--header-bg); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      height: 58px; display: flex; align-items: center;
+    }
+    .header-brand {
+      width: 256px; flex-shrink: 0; padding: 0 20px;
+      display: flex; align-items: center; gap: 10px;
+      border-right: 1px solid var(--border); height: 100%;
+    }
+    .header-logo {
+      width: 30px; height: 30px; flex-shrink: 0;
+      background: linear-gradient(135deg, #077187, #074f57);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      color: #e4c5af; font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 500;
+    }
+    .header-title { font-family: 'Gowun Batang', serif; font-size: 13px; font-weight: 700; color: var(--text-primary); }
+    .header-subtitle { font-size: 10px; color: var(--text-muted); }
+    .header-content {
+      flex: 1; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-summary { font-size: 12px; color: var(--text-secondary); }
+    .header-summary code {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--code-bg); color: var(--code-text);
+      padding: 1px 5px; border-radius: 4px; font-size: 11px;
+    }
+    .theme-toggle {
+      display: flex; align-items: center; gap: 6px; cursor: pointer;
+      padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
+      background: var(--bg-surface); color: var(--text-secondary);
+      font-size: 12px; transition: all 0.2s; font-family: 'Noto Sans KR', sans-serif;
+    }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Layout */
+    .layout { display: flex; margin-top: 58px; min-height: calc(100vh - 58px); }
+
+    /* Sidebar */
+    .sidebar {
+      width: 256px; flex-shrink: 0;
+      position: fixed; top: 58px; left: 0; bottom: 0;
+      background: var(--sidebar-bg); overflow-y: auto; padding: 14px 0;
+    }
+    .sidebar::-webkit-scrollbar { width: 3px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+    .nav-item {
+      display: block; padding: 6px 18px;
+      color: var(--sidebar-text); text-decoration: none;
+      font-size: 12px; opacity: 0.75; transition: all 0.15s;
+      border-left: 2px solid transparent; cursor: pointer;
+    }
+    .nav-item:hover { background: var(--sidebar-hover); opacity: 1; }
+    .nav-item.active { background: var(--sidebar-active); border-left-color: var(--sidebar-text); opacity: 1; font-weight: 600; }
+    .nav-item.l1 { font-size: 12.5px; font-weight: 600; opacity: 1; padding: 8px 18px; }
+    .nav-item.l2 { padding-left: 30px; }
+    .nav-item.l3 { padding-left: 42px; font-size: 11.5px; opacity: 0.6; }
+    .nav-divider { height: 1px; background: rgba(255,255,255,0.05); margin: 7px 14px; }
+
+    /* Main */
+    .main { margin-left: 256px; flex: 1; padding: 44px 52px; max-width: 940px; }
+
+    /* Sections */
+    .section { margin-bottom: 64px; scroll-margin-top: 78px; }
+    .section-header { margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid var(--border); }
+    .section-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+    .section-title { font-family: 'Gowun Batang', serif; font-size: 26px; font-weight: 700; color: var(--text-primary); }
+    .subsection { margin-bottom: 40px; scroll-margin-top: 78px; }
+    .subsection-title {
+      font-family: 'Gowun Batang', serif; font-size: 18px; font-weight: 700;
+      color: var(--text-primary); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sub-num {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--accent); background: var(--accent-light);
+      padding: 2px 7px; border-radius: 4px; font-weight: 500;
+    }
+    .subsubsection { margin-bottom: 28px; scroll-margin-top: 78px; }
+    .subsubsection-title {
+      font-size: 15px; font-weight: 600; color: var(--text-primary);
+      margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    p { font-size: 13.5px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.75; }
+
+    /* Overview steps */
+    .overview-steps { display: flex; flex-direction: column; gap: 12px; }
+    .overview-step {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 16px 20px; background: var(--card-bg);
+      border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--card-shadow);
+    }
+    .step-num {
+      width: 28px; height: 28px; flex-shrink: 0;
+      background: linear-gradient(135deg, #077187, #074f57);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 13px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .step-content strong { display: block; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .step-content span { font-size: 12.5px; color: var(--text-secondary); }
+    .step-content code {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--code-bg); color: var(--code-text);
+      padding: 1px 5px; border-radius: 4px; font-size: 11px;
+    }
+
+    /* Pipeline card */
+    .pipeline-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; box-shadow: var(--card-shadow); margin-bottom: 16px;
+    }
+    .pipeline-card-header {
+      padding: 12px 18px; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .stage-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      font-weight: 600; padding: 3px 8px; border-radius: 5px; letter-spacing: 0.3px;
+    }
+    .pipeline-card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .pipeline-card-body { padding: 14px 18px; }
+    .meta-grid { display: grid; grid-template-columns: 90px 1fr; gap: 8px 14px; font-size: 12.5px; }
+    .meta-label { color: var(--text-muted); font-weight: 500; padding-top: 1px; }
+    .tag {
+      display: inline-block; background: var(--tag-bg); color: var(--tag-text);
+      border-radius: 4px; padding: 1px 7px;
+      font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-right: 3px;
+    }
+    .muted { color: var(--text-muted); font-size: 12px; }
+    .info-box {
+      display: flex; gap: 10px; padding: 11px 15px;
+      background: var(--info-bg); border: 1px solid var(--info-border);
+      border-radius: 8px; margin-top: 14px;
+      font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;
+    }
+    .info-icon { flex-shrink: 0; }
+
+    /* Stage color classes */
+    .s-sel  { background: rgba(184,137,90,0.13);  color: #b8895a; border: 1px solid rgba(184,137,90,0.28); }
+    .s-plan { background: rgba(90,158,111,0.13);  color: #5a9e6f; border: 1px solid rgba(90,158,111,0.28); }
+    .s-dsgn { background: rgba(7,113,135,0.13);   color: #077187; border: 1px solid rgba(7,113,135,0.28); }
+    .s-dev  { background: rgba(116,165,127,0.13); color: #4a8a5a; border: 1px solid rgba(116,165,127,0.28); }
+    .s-test { background: rgba(197,168,130,0.13); color: #a07848; border: 1px solid rgba(197,168,130,0.28); }
+    [data-theme="dark"] .s-sel  { color: #d4a870; border-color: rgba(212,168,112,0.3); }
+    [data-theme="dark"] .s-plan { color: #7cc48a; border-color: rgba(124,196,138,0.3); }
+    [data-theme="dark"] .s-dsgn { color: #4aaec4; border-color: rgba(74,174,196,0.3); }
+    [data-theme="dark"] .s-dev  { color: #9ece9a; border-color: rgba(158,206,154,0.3); }
+    [data-theme="dark"] .s-test { color: #e4c5af; border-color: rgba(228,197,175,0.3); }
+
+    /* Work-type pipeline flow */
+    .wt-section { margin-bottom: 32px; }
+    .wt-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+    .flow-wrap {
+      display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px;
+      padding: 20px; background: var(--bg-surface2);
+      border: 1px solid var(--border); border-radius: 10px;
+    }
+    .flow-node { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .flow-stage {
+      padding: 8px 10px; border-radius: 7px; font-size: 11px; font-weight: 600;
+      text-align: center; min-width: 64px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .flow-lbl { font-size: 9.5px; color: var(--text-muted); text-align: center; max-width: 64px; line-height: 1.3; }
+    .flow-arrow { color: var(--text-muted); font-size: 14px; align-self: flex-start; margin-top: 10px; }
+    .skipped { opacity: 0.28; }
+    .skipped .flow-stage { text-decoration: line-through; }
+
+    /* Overview Pipeline */
+    .ov-pipeline {
+      display: flex; align-items: flex-start; gap: 0;
+      overflow-x: auto; padding: 4px 0 16px;
+    }
+    .ov-pipeline::-webkit-scrollbar { height: 5px; }
+    .ov-pipeline::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+    .ov-group {
+      display: flex; flex-direction: column; flex-shrink: 0;
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; box-shadow: var(--card-shadow);
+    }
+    .ov-group-header {
+      padding: 7px 16px; font-size: 10px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase; text-align: center;
+    }
+    .ov-gh-sel  { background: rgba(184,137,90,0.14); color: #b8895a; border-bottom: 1px solid rgba(184,137,90,0.2); }
+    .ov-gh-plan { background: rgba(90,158,111,0.14); color: #5a9e6f; border-bottom: 1px solid rgba(90,158,111,0.2); }
+    .ov-gh-dsgn { background: rgba(7,113,135,0.14); color: #077187; border-bottom: 1px solid rgba(7,113,135,0.2); }
+    .ov-gh-dev  { background: rgba(116,165,127,0.14); color: #4a8a5a; border-bottom: 1px solid rgba(116,165,127,0.2); }
+    .ov-gh-test { background: rgba(197,168,130,0.14); color: #a07848; border-bottom: 1px solid rgba(197,168,130,0.2); }
+    [data-theme="dark"] .ov-gh-sel  { color: #d4a870; }
+    [data-theme="dark"] .ov-gh-plan { color: #7cc48a; }
+    [data-theme="dark"] .ov-gh-dsgn { color: #4aaec4; }
+    [data-theme="dark"] .ov-gh-dev  { color: #9ece9a; }
+    [data-theme="dark"] .ov-gh-test { color: #e4c5af; }
+    .ov-nodes {
+      display: flex; align-items: center; padding: 14px 12px; gap: 4px;
+    }
+    .ov-node {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      padding: 6px 8px; border-radius: 7px; cursor: default;
+      position: relative; transition: background 0.15s;
+    }
+    .ov-node:hover { background: var(--accent-light); }
+    .ov-node-stage {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+      padding: 6px 10px; border-radius: 7px; text-align: center; min-width: 44px;
+    }
+    .ov-skill {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      color: var(--accent); text-align: center;
+    }
+    .ov-artifact {
+      font-size: 10.5px; color: var(--text-secondary);
+      text-align: center; max-width: 76px; line-height: 1.3;
+    }
+    .ov-inner-arrow {
+      color: var(--text-muted); font-size: 13px; flex-shrink: 0;
+      align-self: center; padding-bottom: 18px;
+    }
+    .ov-group-arrow {
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 8px; color: var(--text-muted); font-size: 20px;
+      flex-shrink: 0; padding-top: 36px;
+    }
+    .ov-node::after {
+      content: attr(data-tip);
+      position: absolute; bottom: calc(100% + 7px); left: 50%;
+      transform: translateX(-50%);
+      background: var(--text-primary); color: var(--bg);
+      padding: 4px 9px; border-radius: 5px; font-size: 11px;
+      white-space: nowrap; opacity: 0; pointer-events: none;
+      transition: opacity 0.15s; z-index: 20;
+    }
+    .ov-node:hover::after { opacity: 1; }
+    .ov-optional { opacity: 0.5; }
+
+    /* Skills table */
+    .tbl-wrap { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th {
+      text-align: left; padding: 9px 14px;
+      background: var(--bg-surface2); color: var(--text-secondary);
+      font-size: 10.5px; font-weight: 600; letter-spacing: 0.5px;
+      text-transform: uppercase; border-bottom: 1px solid var(--border);
+    }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-primary); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--accent-light); }
+    .skill-path {
+      font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+      color: var(--code-text); background: var(--code-bg);
+      padding: 2px 6px; border-radius: 4px;
+    }
+    .skill-cat { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Hooks */
+    .hooks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .hook-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--card-shadow); }
+    .hook-header { padding: 11px 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 9px; }
+    .hook-type {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+      padding: 2px 8px; border-radius: 5px; letter-spacing: 0.4px;
+    }
+    .pre-badge  { background: rgba(7,113,135,0.12); color: #077187; border: 1px solid rgba(7,113,135,0.28); }
+    .post-badge { background: rgba(116,165,127,0.12); color: #4a8a5a; border: 1px solid rgba(116,165,127,0.28); }
+    [data-theme="dark"] .pre-badge  { color: #4aaec4; }
+    [data-theme="dark"] .post-badge { color: #9ece9a; }
+    .hook-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .hook-body { padding: 13px 15px; }
+    .hook-desc { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.6; }
+    .hook-rules { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+    .hook-rules li { font-size: 12px; color: var(--text-secondary); padding-left: 13px; position: relative; }
+    .hook-rules li::before { content: '›'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+
+    /* Code block */
+    .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .code-header {
+      padding: 7px 15px; background: var(--bg-surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .code-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+    .code-body {
+      padding: 16px; font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; line-height: 1.7; color: var(--code-text);
+      overflow-x: auto; white-space: pre;
+    }
+
+    /* Key list */
+    .key-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+    .key-item {
+      display: flex; gap: 12px; padding: 10px 14px;
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+    }
+    .key-name {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--code-text); background: var(--code-bg);
+      padding: 2px 7px; border-radius: 4px;
+      white-space: nowrap; align-self: flex-start; flex-shrink: 0;
+    }
+    .key-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; }
+
+    /* Active task flow */
+    .at-flow { display: flex; flex-direction: column; gap: 0; margin-top: 14px; }
+    .at-item { display: flex; align-items: flex-start; gap: 14px; }
+    .at-timeline { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+    .at-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); margin-top: 5px; }
+    .at-line { width: 2px; height: 34px; background: var(--border); }
+    .at-text { padding-bottom: 20px; }
+    .at-text strong { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 2px; }
+    .at-text span { font-size: 12px; color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="header-logo">/dev</div>
+    <div>
+      <div class="header-title">여보야 플러그인 온보딩</div>
+      <div class="header-subtitle">업무 파이프라인 가이드</div>
+    </div>
+  </div>
+  <div class="header-content">
+    <span class="header-summary">
+      <code>/dev-init</code> 초기 설정 → <code>/dev [일감번호]</code> 파이프라인 진입 → <code>state.json</code> 으로 기획부터 QA까지 단계별 상태 추적
+    </span>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span id="theme-icon">🌙</span>
+      <span id="theme-label">다크</span>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-item l1 active" href="#overview" data-target="overview">1. 개요</a>
+    <a class="nav-item l1" href="#overview-pipeline" data-target="overview-pipeline">한눈에 보는 파이프라인</a>
+    <div class="nav-divider"></div>
+    <a class="nav-item l1" href="#pipeline" data-target="pipeline">2. 전체 파이프라인</a>
+    <a class="nav-item l2" href="#s-1-1" data-target="s-1-1">2.1 작업 종류 선택</a>
+    <a class="nav-item l2" href="#planning" data-target="planning">2.2 기획</a>
+    <a class="nav-item l3" href="#s-2-1" data-target="s-2-1">2.2.1 기획서 검토</a>
+    <a class="nav-item l3" href="#s-2-2" data-target="s-2-2">2.2.2 최종 기획서 확정</a>
+    <a class="nav-item l2" href="#design" data-target="design">2.3 설계</a>
+    <a class="nav-item l3" href="#s-3-1" data-target="s-3-1">2.3.1 UI 흐름도</a>
+    <a class="nav-item l3" href="#s-3-2" data-target="s-3-2">2.3.2 데이터 흐름도</a>
+    <a class="nav-item l3" href="#s-3-3" data-target="s-3-3">2.3.3 기술 명세서</a>
+    <a class="nav-item l2" href="#development" data-target="development">2.4 개발</a>
+    <a class="nav-item l3" href="#s-4-1" data-target="s-4-1">2.4.1 디자인 유무 확인</a>
+    <a class="nav-item l3" href="#s-4-2" data-target="s-4-2">2.4.2 코드 작성</a>
+    <a class="nav-item l3" href="#s-4-3" data-target="s-4-3">2.4.3 코드 리뷰</a>
+    <a class="nav-item l2" href="#testing" data-target="testing">2.5 테스트 및 배포</a>
+    <a class="nav-item l3" href="#s-5-1" data-target="s-5-1">2.5.1 QA 시나리오</a>
+    <a class="nav-item l3" href="#s-5-2" data-target="s-5-2">2.5.2 테스트 버그 수정</a>
+    <a class="nav-item l3" href="#s-5-3" data-target="s-5-3">2.5.3 작업 완료</a>
+    <div class="nav-divider"></div>
+    <a class="nav-item l1" href="#worktype" data-target="worktype">3. 작업 종류별 파이프라인</a>
+    <a class="nav-item l2" href="#wt-new" data-target="wt-new">3.1 new</a>
+    <a class="nav-item l2" href="#wt-change" data-target="wt-change">3.2 change</a>
+    <a class="nav-item l2" href="#wt-bugfix" data-target="wt-bugfix">3.3 bug-fix</a>
+    <div class="nav-divider"></div>
+    <a class="nav-item l1" href="#reference" data-target="reference">4. 추가 문서</a>
+    <a class="nav-item l2" href="#skills-list" data-target="skills-list">4.1 스킬 목록</a>
+    <a class="nav-item l2" href="#hooks" data-target="hooks">4.2 Hook 파이프라인</a>
+    <a class="nav-item l2" href="#state" data-target="state">4.3 작업 상태 관리</a>
+    <a class="nav-item l3" href="#state-json" data-target="state-json">4.3.1 state.json</a>
+    <a class="nav-item l3" href="#active-task" data-target="active-task">4.3.2 active-task</a>
+  </nav>
+
+  <main class="main">
+
+    <!-- 1. 개요 -->
+    <section class="section" id="overview">
+      <div class="section-header">
+        <div class="section-num">SECTION 01</div>
+        <h2 class="section-title">개요</h2>
+      </div>
+      <div class="overview-steps">
+        <div class="overview-step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>초기 설정</strong>
+            <span><code>/dev-init</code>을 실행해 서비스·플랫폼·작업자 정보와 Notion MCP 연결을 설정한다. 정보는 <code>.claude/dev-config.json</code>에 저장된다.</span>
+          </div>
+        </div>
+        <div class="overview-step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>파이프라인 진입</strong>
+            <span><code>/dev [일감번호]</code>를 실행하면 <code>.claude/active-task</code>에 일감번호가 기록되고, 단계별 스킬이 순서대로 라우팅된다.</span>
+          </div>
+        </div>
+        <div class="overview-step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>상태 추적</strong>
+            <span>각 단계 완료 시 <code>.dev-work/[일감번호]/state.json</code>이 갱신된다. Hook이 Notion 쓰기를 실시간 검증해 잘못된 순서의 산출물 작성을 자동 차단한다.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 한눈에 보는 파이프라인 -->
+    <section class="section" id="overview-pipeline">
+      <div class="section-header">
+        <div class="section-num">OVERVIEW</div>
+        <h2 class="section-title">한눈에 보는 파이프라인</h2>
+      </div>
+      <div class="ov-pipeline">
+
+        <div class="ov-group">
+          <div class="ov-group-header ov-gh-sel">시작</div>
+          <div class="ov-nodes">
+            <div class="ov-node" data-tip="선행 없음 — 파이프라인 시작점">
+              <div class="ov-node-stage s-sel">1.1</div>
+              <div class="ov-skill">work-define</div>
+              <div class="ov-artifact">작업 종류 선택</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ov-group-arrow">→</div>
+
+        <div class="ov-group">
+          <div class="ov-group-header ov-gh-plan">기획</div>
+          <div class="ov-nodes">
+            <div class="ov-node" data-tip="선행: 1.1 완료">
+              <div class="ov-node-stage s-plan">2.1</div>
+              <div class="ov-skill">spec-review</div>
+              <div class="ov-artifact">기획서 검토</div>
+            </div>
+            <div class="ov-inner-arrow">→</div>
+            <div class="ov-node" data-tip="선행: 2.1 완료">
+              <div class="ov-node-stage s-plan">2.2</div>
+              <div class="ov-skill">spec-finalize</div>
+              <div class="ov-artifact">최종 기획서</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ov-group-arrow">→</div>
+
+        <div class="ov-group">
+          <div class="ov-group-header ov-gh-dsgn">설계</div>
+          <div class="ov-nodes">
+            <div class="ov-node" data-tip="선행: 2.2 완료">
+              <div class="ov-node-stage s-dsgn">3.1</div>
+              <div class="ov-skill">ui-flow</div>
+              <div class="ov-artifact">UI 흐름도</div>
+            </div>
+            <div class="ov-inner-arrow">→</div>
+            <div class="ov-node" data-tip="선행: 2.2 완료">
+              <div class="ov-node-stage s-dsgn">3.2</div>
+              <div class="ov-skill">data-flow</div>
+              <div class="ov-artifact">데이터 흐름도</div>
+            </div>
+            <div class="ov-inner-arrow">→</div>
+            <div class="ov-node" data-tip="선행: 3.1, 3.2 완료">
+              <div class="ov-node-stage s-dsgn">3.3</div>
+              <div class="ov-skill">tech-spec</div>
+              <div class="ov-artifact">기술 명세서</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ov-group-arrow">→</div>
+
+        <div class="ov-group">
+          <div class="ov-group-header ov-gh-dev">개발</div>
+          <div class="ov-nodes">
+            <div class="ov-node" data-tip="선행: 3.3 완료">
+              <div class="ov-node-stage s-dev">4.1</div>
+              <div class="ov-skill">design-check</div>
+              <div class="ov-artifact">디자인 확인</div>
+            </div>
+            <div class="ov-inner-arrow">→</div>
+            <div class="ov-node" data-tip="선행: 4.1 완료">
+              <div class="ov-node-stage s-dev">4.2</div>
+              <div class="ov-skill">code-write</div>
+              <div class="ov-artifact">코드 작성</div>
+            </div>
+            <div class="ov-inner-arrow">→</div>
+            <div class="ov-node" data-tip="선행: 4.2 완료">
+              <div class="ov-node-stage s-dev">4.3</div>
+              <div class="ov-skill">code-review</div>
+              <div class="ov-artifact">코드 리뷰</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ov-group-arrow">→</div>
+
+        <div class="ov-group">
+          <div class="ov-group-header ov-gh-test">테스트</div>
+          <div class="ov-nodes">
+            <div class="ov-node" data-tip="선행: 4.3 완료">
+              <div class="ov-node-stage s-test">5.1</div>
+              <div class="ov-skill">qa-scenario</div>
+              <div class="ov-artifact">QA 시나리오</div>
+            </div>
+            <div class="ov-inner-arrow">→</div>
+            <div class="ov-node ov-optional" data-tip="QA 중 버그 발견 시 선택 실행">
+              <div class="ov-node-stage s-test">5.2</div>
+              <div class="ov-skill">bug-fix</div>
+              <div class="ov-artifact">버그 수정<br>(선택)</div>
+            </div>
+            <div class="ov-inner-arrow">→</div>
+            <div class="ov-node" data-tip="선행: 5.1 완료">
+              <div class="ov-node-stage s-test">5.3</div>
+              <div class="ov-skill">task-complete</div>
+              <div class="ov-artifact">작업 완료</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 2. 전체 파이프라인 -->
+    <section class="section" id="pipeline">
+      <div class="section-header">
+        <div class="section-num">SECTION 02</div>
+        <h2 class="section-title">전체 파이프라인</h2>
+      </div>
+
+      <!-- 2.1 -->
+      <div class="subsection" id="s-1-1">
+        <div class="subsection-title"><span class="sub-num">1.1</span> 작업 종류 선택</div>
+        <div class="pipeline-card">
+          <div class="pipeline-card-header">
+            <span class="stage-badge s-sel">1.1</span>
+            <span class="pipeline-card-title">작업 종류 선택</span>
+          </div>
+          <div class="pipeline-card-body">
+            <div class="meta-grid">
+              <span class="meta-label">사용 스킬</span><span><span class="tag">work-define</span></span>
+              <span class="meta-label">Hook</span><span class="muted">없음</span>
+              <span class="meta-label">산출물</span><span>state.json에 workType 기록 (new / change / bugfix)</span>
+              <span class="meta-label">선행 작업</span><span class="muted">없음 — 파이프라인 시작점</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2.2 기획 -->
+      <div class="subsection" id="planning">
+        <div class="subsection-title"><span class="sub-num">2.x</span> 기획</div>
+
+        <div class="subsubsection" id="s-2-1">
+          <div class="subsubsection-title">2.1 기획서 검토</div>
+          <div class="pipeline-card">
+            <div class="pipeline-card-header"><span class="stage-badge s-plan">2.1</span><span class="pipeline-card-title">기획서 검토</span></div>
+            <div class="pipeline-card-body">
+              <div class="meta-grid">
+                <span class="meta-label">사용 스킬</span><span><span class="tag">spec-review</span></span>
+                <span class="meta-label">Hook</span><span><span class="tag">validate-guard</span> <span class="tag">pageid-capture</span></span>
+                <span class="meta-label">산출물</span><span>Notion 기획서 검토 페이지</span>
+                <span class="meta-label">선행 작업</span><span>1.1 완료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsubsection" id="s-2-2">
+          <div class="subsubsection-title">2.2 최종 기획서 확정</div>
+          <div class="pipeline-card">
+            <div class="pipeline-card-header"><span class="stage-badge s-plan">2.2</span><span class="pipeline-card-title">최종 기획서 확정</span></div>
+            <div class="pipeline-card-body">
+              <div class="meta-grid">
+                <span class="meta-label">사용 스킬</span><span><span class="tag">spec-finalize</span></span>
+                <span class="meta-label">Hook</span><span><span class="tag">stage-guard</span> <span class="tag">validate-guard</span> <span class="tag">pageid-capture</span></span>
+                <span class="meta-label">산출물</span><span>Notion 최종 기획서 페이지</span>
+                <span class="meta-label">선행 작업</span><span>2.1 완료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <span class="info-icon">ℹ️</span>
+          <span>기획 단계(2.1 · 2.2)는 <strong>공동 작업</strong>입니다. 팀 내 다른 구성원이 이미 기획서를 완성한 경우, 해당 단계를 스킵하고 다음 단계로 진행할 수 있습니다.</span>
+        </div>
+      </div>
+
+      <!-- 2.3 설계 -->
+      <div class="subsection" id="design">
+        <div class="subsection-title"><span class="sub-num">3.x</span> 설계</div>
+
+        <div class="subsubsection" id="s-3-1">
+          <div class="subsubsection-title">3.1 UI 흐름도 작성</div>
+          <div class="pipeline-card">
+            <div class="pipeline-card-header"><span class="stage-badge s-dsgn">3.1</span><span class="pipeline-card-title">UI 흐름도 작성</span></div>
+            <div class="pipeline-card-body">
+              <div class="meta-grid">
+                <span class="meta-label">사용 스킬</span><span><span class="tag">ui-flow</span></span>
+                <span class="meta-label">Hook</span><span><span class="tag">stage-guard</span> <span class="tag">validate-guard</span> <span class="tag">pageid-capture</span></span>
+                <span class="meta-label">산출물</span><span>Notion UI 흐름도 페이지</span>
+                <span class="meta-label">선행 작업</span><span>2.2 완료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsubsection" id="s-3-2">
+          <div class="subsubsection-title">3.2 데이터 흐름도 작성</div>
+          <div class="pipeline-card">
+            <div class="pipeline-card-header"><span class="stage-badge s-dsgn">3.2</span><span class="pipeline-card-title">데이터 흐름도 작성</span></div>
+            <div class="pipeline-card-body">
+              <div class="meta-grid">
+                <span class="meta-label">사용 스킬</span><span><span class="tag">data-flow</span></span>
+                <span class="meta-label">Hook</span><span><span class="tag">stage-guard</span> <span class="tag">validate-guard</span> <span class="tag">pageid-capture</span></span>
+                <span class="meta-label">산출물</span><span>Notion 데이터 흐름도 페이지</span>
+                <span class="meta-label">선행 작업</span><span>2.2 완료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsubsection" id="s-3-3">
+          <div class="subsubsection-title">3.3 기술 명세서 설계</div>
+          <div class="pipeline-card">
+            <div class="pipeline-card-header"><span class="stage-badge s-dsgn">3.3</span><span class="pipeline-card-title">기술 명세서 설계</span></div>
+            <div class="pipeline-card-body">
+              <div class="meta-grid">
+                <span class="meta-label">사용 스킬</span><span><span class="tag">tech-spec</span></span>
+                <span class="meta-label">Hook</span><span><span class="tag">stage-guard</span> <span class="tag">validate-guard</span> <span class="tag">pageid-capture</span></span>
+                <span class="meta-label">산출물</span><span>Notion 기술 설계 페이지</span>
+                <span class="meta-label">선행 작업</span><span>3.1, 3.2 완료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <span class="info-icon">ℹ️</span>
+          <span>설계 단계(3.1 · 3.2 · 3.3)도 <strong>공동 작업</strong>입니다. 팀 내에서 이미 작성된 산출물이 있다면 해당 단계를 스킵하고 진행할 수 있습니다.</span>
+        </div>
+      </div>
+
+      <!-- 2.4 개발 -->
+      <div class="subsection" id="development">
+        <div class="subsection-title"><span class="sub-num">4.x</span> 개발</div>
+
+        <div class="subsubsection" id="s-4-1">
+          <div class="subsubsection-title">4.1 디자인 유무 확인</div>
+          <div class="pipeline-card">
+            <div class="pipeline-card-header"><span class="stage-badge s-dev">4.1</span><span class="pipeline-card-title">디자인 유무 확인</span></div>
+            <div class="pipeline-card-body">
+              <div class="meta-grid">
+                <span class="meta-label">사용 스킬</span><span><span class="tag">design-check</span></span>
+                <span class="meta-label">Hook</span><span class="muted">없음</span>
+                <span class="meta-label">산출물</span><span>state.json <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">stages[4.1].result</code> 에 디자인 여부 기록</span>
+                <span class="meta-label">선행 작업</span><span>3.3 완료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsubsection" id="s-4-2">
+          <div class="subsubsection-title">4.2 코드 작성</div>
+          <div class="pipeline-card">
+            <div class="pipeline-card-header"><span class="stage-badge s-dev">4.2</span><span class="pipeline-card-title">코드 작성</span></div>
+            <div class="pipeline-card-body">
+              <div class="meta-grid">
+                <span class="meta-label">사용 스킬</span><span><span class="tag">code-write</span> <span class="tag">bug-fix</span></span>
+                <span class="meta-label">superpowers</span><span><span class="tag">brainstorming</span> <span class="tag">writing-plans</span> <span class="tag">test-driven-development</span> <span class="tag">verification-before-completion</span></span>
+                <span class="meta-label">Hook</span><span class="muted">없음 (git commit 기반 추적)</span>
+                <span class="meta-label">산출물</span><span>Git 커밋 — 접두사 형식: <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">[일감번호]</code></span>
+                <span class="meta-label">선행 작업</span><span>4.1 완료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsubsection" id="s-4-3">
+          <div class="subsubsection-title">4.3 코드 리뷰</div>
+          <div class="pipeline-card">
+            <div class="pipeline-card-header"><span class="stage-badge s-dev">4.3</span><span class="pipeline-card-title">코드 리뷰</span></div>
+            <div class="pipeline-card-body">
+              <div class="meta-grid">
+                <span class="meta-label">사용 스킬</span><span><span class="tag">code-review</span></span>
+                <span class="meta-label">superpowers</span><span><span class="tag">requesting-code-review</span></span>
+                <span class="meta-label">Hook</span><span class="muted">없음</span>
+                <span class="meta-label">산출물</span><span>코드 리뷰 결과 (Git PR 또는 인라인 코멘트)</span>
+                <span class="meta-label">선행 작업</span><span>4.2 완료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2.5 테스트 -->
+      <div class="subsection" id="testing">
+        <div class="subsection-title"><span class="sub-num">5.x</span> 테스트 및 배포</div>
+
+        <div class="subsubsection" id="s-5-1">
+          <div class="subsubsection-title">5.1 QA 시나리오 작성</div>
+          <div class="pipeline-card">
+            <div class="pipeline-card-header"><span class="stage-badge s-test">5.1</span><span class="pipeline-card-title">QA 시나리오 작성</span></div>
+            <div class="pipeline-card-body">
+              <div class="meta-grid">
+                <span class="meta-label">사용 스킬</span><span><span class="tag">qa-scenario</span></span>
+                <span class="meta-label">Hook</span><span><span class="tag">stage-guard</span> <span class="tag">validate-guard</span> <span class="tag">pageid-capture</span></span>
+                <span class="meta-label">산출물</span><span>Notion QA 시트 페이지</span>
+                <span class="meta-label">선행 작업</span><span>4.3 완료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsubsection" id="s-5-2">
+          <div class="subsubsection-title">5.2 테스트 버그 수정 (선택)</div>
+          <div class="pipeline-card">
+            <div class="pipeline-card-header"><span class="stage-badge s-test">5.2</span><span class="pipeline-card-title">테스트 버그 수정</span></div>
+            <div class="pipeline-card-body">
+              <div class="meta-grid">
+                <span class="meta-label">사용 스킬</span><span><span class="tag">bug-fix</span></span>
+                <span class="meta-label">superpowers</span><span><span class="tag">systematic-debugging</span> <span class="tag">test-driven-development</span> <span class="tag">verification-before-completion</span></span>
+                <span class="meta-label">Hook</span><span class="muted">없음</span>
+                <span class="meta-label">산출물</span><span>버그 수정 커밋</span>
+                <span class="meta-label">선행 작업</span><span class="muted">없음 — QA 중 버그 발견 시 수시 실행</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsubsection" id="s-5-3">
+          <div class="subsubsection-title">5.3 작업 완료</div>
+          <div class="pipeline-card">
+            <div class="pipeline-card-header"><span class="stage-badge s-test">5.3</span><span class="pipeline-card-title">작업 완료</span></div>
+            <div class="pipeline-card-body">
+              <div class="meta-grid">
+                <span class="meta-label">사용 스킬</span><span><span class="tag">task-complete</span></span>
+                <span class="meta-label">Hook</span><span class="muted">없음</span>
+                <span class="meta-label">산출물</span><span>작업 완료 리포트, state.json 최종 갱신</span>
+                <span class="meta-label">선행 작업</span><span>5.1 완료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 작업 종류별 파이프라인 -->
+    <section class="section" id="worktype">
+      <div class="section-header">
+        <div class="section-num">SECTION 03</div>
+        <h2 class="section-title">작업 종류별 파이프라인</h2>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#b8895a;"></div>작업 선택</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#5a9e6f;"></div>기획</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#077187;"></div>설계</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#74a57f;"></div>개발</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c5a882;"></div>테스트</div>
+        <div class="legend-item" style="opacity:0.4;"><div class="legend-dot" style="background:#888;"></div>스킵</div>
+      </div>
+
+      <!-- new -->
+      <div class="wt-section" id="wt-new">
+        <div class="wt-title"><span class="stage-badge s-sel">new</span> 신규 개발</div>
+        <div class="flow-wrap">
+          <div class="flow-node"><div class="flow-stage s-sel">1.1</div><div class="flow-lbl">작업 종류 선택</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-plan">2.1</div><div class="flow-lbl">기획서 검토</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-plan">2.2</div><div class="flow-lbl">최종 기획서</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dsgn">3.1</div><div class="flow-lbl">UI 흐름도</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dsgn">3.2</div><div class="flow-lbl">데이터 흐름도</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dsgn">3.3</div><div class="flow-lbl">기술 명세서</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dev">4.1</div><div class="flow-lbl">디자인 확인</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dev">4.2</div><div class="flow-lbl">코드 작성</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dev">4.3</div><div class="flow-lbl">코드 리뷰</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-test">5.1</div><div class="flow-lbl">QA 시나리오</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-test">5.3</div><div class="flow-lbl">작업 완료</div></div>
+        </div>
+      </div>
+
+      <!-- change -->
+      <div class="wt-section" id="wt-change">
+        <div class="wt-title"><span class="stage-badge s-dsgn">change</span> 수정·고도화</div>
+        <div class="flow-wrap">
+          <div class="flow-node"><div class="flow-stage s-sel">1.1</div><div class="flow-lbl">작업 종류 선택</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-plan">2.1</div><div class="flow-lbl">기획서 검토</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-plan">2.2</div><div class="flow-lbl">최종 기획서</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dsgn">3.1</div><div class="flow-lbl">UI 흐름도</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dsgn">3.2</div><div class="flow-lbl">데이터 흐름도</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dsgn">3.3</div><div class="flow-lbl">기술 명세서</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dev">4.1</div><div class="flow-lbl">디자인 확인</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dev">4.2</div><div class="flow-lbl">코드 작성</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dev">4.3</div><div class="flow-lbl">코드 리뷰</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-test">5.1</div><div class="flow-lbl">QA 시나리오</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-test">5.3</div><div class="flow-lbl">작업 완료</div></div>
+        </div>
+      </div>
+
+      <!-- bugfix -->
+      <div class="wt-section" id="wt-bugfix">
+        <div class="wt-title"><span class="stage-badge s-test">bug-fix</span> 버그 수정</div>
+        <div class="flow-wrap">
+          <div class="flow-node"><div class="flow-stage s-sel">1.1</div><div class="flow-lbl">작업 종류 선택</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-plan">2.1</div><div class="flow-lbl">기획서 검토</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node skipped"><div class="flow-stage s-plan">2.2</div><div class="flow-lbl">최종 기획서</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node skipped"><div class="flow-stage s-dsgn">3.1</div><div class="flow-lbl">UI 흐름도</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node skipped"><div class="flow-stage s-dsgn">3.2</div><div class="flow-lbl">데이터 흐름도</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node skipped"><div class="flow-stage s-dsgn">3.3</div><div class="flow-lbl">기술 명세서</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node skipped"><div class="flow-stage s-dev">4.1</div><div class="flow-lbl">디자인 확인</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dev">4.2</div><div class="flow-lbl">코드 작성</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-dev">4.3</div><div class="flow-lbl">코드 리뷰</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div class="flow-stage s-test">5.3</div><div class="flow-lbl">작업 완료</div></div>
+        </div>
+        <div class="info-box" style="margin-top:12px;">
+          <span class="info-icon">ℹ️</span>
+          <span>흐릿하게 표시된 단계는 <strong>bug-fix</strong>에서 자동 스킵됩니다. <code>/dev</code> 메뉴에서 해당 단계가 숨겨지며, state.json에도 해당 단계 키가 생략됩니다.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 추가 문서 -->
+    <section class="section" id="reference">
+      <div class="section-header">
+        <div class="section-num">SECTION 04</div>
+        <h2 class="section-title">추가 문서</h2>
+      </div>
+
+      <!-- 4.1 스킬 목록 -->
+      <div class="subsection" id="skills-list">
+        <div class="subsection-title"><span class="sub-num">4.1</span> 스킬 목록 및 설명</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr><th>스킬</th><th>카테고리</th><th>단계</th><th>기능 요약</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="skill-path">dev</span></td>
+                <td><div class="skill-cat">setting</div></td>
+                <td>—</td>
+                <td>workType·진행 단계에 따라 스킬을 라우팅하는 메인 오케스트레이터</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">dev-init</span></td>
+                <td><div class="skill-cat">setting</div></td>
+                <td>—</td>
+                <td>최초 실행 시 서비스·플랫폼·작업자·MCP 연결 정보를 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">dev-config.json</code>에 저장</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">service-config</span></td>
+                <td><div class="skill-cat">setting</div></td>
+                <td>—</td>
+                <td>서비스별 Notion 페이지 ID 매핑 설정</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">work-define</span></td>
+                <td><div class="skill-cat">planning</div></td>
+                <td>1.1</td>
+                <td>작업 종류(new / change / bugfix) 선택 후 state.json에 workType 기록</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">spec-review</span></td>
+                <td><div class="skill-cat">planning</div></td>
+                <td>2.1</td>
+                <td>Notion 기획서를 조회해 검토하고 피드백을 정리</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">spec-finalize</span></td>
+                <td><div class="skill-cat">planning</div></td>
+                <td>2.2</td>
+                <td>검토 결과를 반영한 최종 기획서를 Notion에 업로드하고 page_id를 state에 기록</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">ui-flow</span></td>
+                <td><div class="skill-cat">blueprint</div></td>
+                <td>3.1</td>
+                <td>화면 전환·사용자 행동 흐름을 정리한 UI 흐름도 작성</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">data-flow</span></td>
+                <td><div class="skill-cat">blueprint</div></td>
+                <td>3.2</td>
+                <td>API 호출·데이터 변환 흐름을 정리한 데이터 흐름도 작성</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">tech-spec</span></td>
+                <td><div class="skill-cat">blueprint</div></td>
+                <td>3.3</td>
+                <td>UI·데이터 흐름도를 바탕으로 기술 구현 명세서 작성</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">design-check</span></td>
+                <td><div class="skill-cat">development</div></td>
+                <td>4.1</td>
+                <td>Figma/Zeplin 등 디자인 시스템 연결 여부 확인 후 state에 결과 기록</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">code-write</span></td>
+                <td><div class="skill-cat">development</div></td>
+                <td>4.2</td>
+                <td>brainstorming → writing-plans → TDD 파이프라인을 선행 호출 후 코드 작성</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">code-review</span></td>
+                <td><div class="skill-cat">development</div></td>
+                <td>4.3</td>
+                <td>requesting-code-review 스킬을 선행 호출해 체계적인 리뷰 수행</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">bug-fix</span></td>
+                <td><div class="skill-cat">development</div></td>
+                <td>4.2 / 5.2</td>
+                <td>systematic-debugging으로 원인 분석 후 TDD 사이클로 버그 수정</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">qa-scenario</span></td>
+                <td><div class="skill-cat">testing</div></td>
+                <td>5.1</td>
+                <td>기술 설계·코드 리뷰 결과를 기반으로 QA 시트를 Notion에 작성</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">task-complete</span></td>
+                <td><div class="skill-cat">testing</div></td>
+                <td>5.3</td>
+                <td>전체 산출물 요약 리포트 생성 및 state.json 최종 완료 처리</td>
+              </tr>
+              <tr>
+                <td><span class="skill-path">notion-writer</span></td>
+                <td><div class="skill-cat">common</div></td>
+                <td>—</td>
+                <td>Notion MCP 툴 호출을 추상화한 공통 쓰기 유틸리티</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 4.2 Hooks -->
+      <div class="subsection" id="hooks">
+        <div class="subsection-title"><span class="sub-num">4.2</span> Hook 파이프라인</div>
+        <div class="hooks-grid">
+          <div class="hook-card">
+            <div class="hook-header">
+              <span class="hook-type pre-badge">PreToolUse</span>
+              <span class="hook-name">stage-guard.js</span>
+            </div>
+            <div class="hook-body">
+              <p class="hook-desc">Notion 쓰기(<code style="font-family:'JetBrains Mono',monospace;font-size:11px;">notion-create-pages</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">notion-update-page</code>) 직전에 실행. 현재 파이프라인 단계와 산출물 제목이 일치하는지 검증합니다.</p>
+              <ul class="hook-rules">
+                <li>active-task가 비어 있으면 허용</li>
+                <li>알 수 없는 페이지 제목이면 허용</li>
+                <li>단계 불일치 시 쓰기 차단</li>
+                <li><code style="font-family:'JetBrains Mono',monospace;font-size:11px;">DEV_GUARD_BYPASS=1</code> 으로 우회 가능</li>
+              </ul>
+            </div>
+          </div>
+          <div class="hook-card">
+            <div class="hook-header">
+              <span class="hook-type pre-badge">PreToolUse</span>
+              <span class="hook-name">validate-guard.js</span>
+            </div>
+            <div class="hook-body">
+              <p class="hook-desc">산출물 저장 전 단계별 포맷 규칙을 검증. 필수 섹션 누락·형식 오류 시 쓰기를 차단합니다.</p>
+              <ul class="hook-rules">
+                <li>단계별 검증 규칙 독립 적용</li>
+                <li>규칙 미충족 시 오류 메시지와 함께 차단</li>
+                <li>validate-guard.js 직접 편집으로 규칙 수정 가능</li>
+              </ul>
+            </div>
+          </div>
+          <div class="hook-card">
+            <div class="hook-header">
+              <span class="hook-type post-badge">PostToolUse</span>
+              <span class="hook-name">pageid-capture.js</span>
+            </div>
+            <div class="hook-body">
+              <p class="hook-desc">Notion 쓰기 성공 후 응답에서 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">page_id</code>를 자동 추출해 state.json에 기록합니다.</p>
+              <ul class="hook-rules">
+                <li>응답에서 page_id 추출</li>
+                <li><code style="font-family:'JetBrains Mono',monospace;font-size:11px;">stages[N.M].artifactPageId</code> 에 저장</li>
+                <li><code style="font-family:'JetBrains Mono',monospace;font-size:11px;">stages[N.M].validated</code> 를 true로 갱신</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4.3 작업 상태 관리 -->
+      <div class="subsection" id="state">
+        <div class="subsection-title"><span class="sub-num">4.3</span> 작업 상태 관리</div>
+
+        <div class="subsubsection" id="state-json">
+          <div class="subsubsection-title">4.3.1 .dev-work/[일감번호]/state.json</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-label">.dev-work/DCL-1351/state.json</span></div>
+            <div class="code-body">{
+  "task": "DCL-1351",
+  "workType": "new",
+  "finalSpec": null,
+  "activeStage": "3.1",
+  "activeSkill": "skills/blueprint/ui-flow",
+  "stages": {
+    "1.1": { "done": false, "at": null },
+    "2.1": { "done": false, "validated": false, "artifactPageId": null },
+    "2.2": { "done": false, "validated": false, "artifactPageId": null },
+    "3.1": { "done": false, "validated": false, "artifactPageId": null },
+    "3.2": { "done": false, "validated": false, "artifactPageId": null },
+    "3.3": { "done": false, "validated": false, "artifactPageId": null },
+    "4.1": { "done": false, "result": null },
+    "4.2": { "done": false },
+    "4.3": { "done": false },
+    "5.1": { "done": false, "validated": false, "artifactPageId": null }
+  },
+  "lastUpdated": "2026-04-21T09:00:00.000Z"
+}</div>
+          </div>
+          <div class="key-list">
+            <div class="key-item"><span class="key-name">task</span><span class="key-desc">현재 작업의 일감번호. <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">/dev [일감번호]</code> 실행 시 설정됩니다.</span></div>
+            <div class="key-item"><span class="key-name">workType</span><span class="key-desc">work-define(1.1)에서 선택한 작업 종류. <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">new</code> / <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">change</code> / <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">bugfix</code> 중 하나.</span></div>
+            <div class="key-item"><span class="key-name">finalSpec</span><span class="key-desc">spec-finalize(2.2) 완료 후 Notion 최종 기획서의 page_id가 저장됩니다.</span></div>
+            <div class="key-item"><span class="key-name">activeStage</span><span class="key-desc">현재 진행 중인 단계 번호. Hook이 이 값을 기준으로 단계 검증을 수행합니다.</span></div>
+            <div class="key-item"><span class="key-name">activeSkill</span><span class="key-desc">현재 실행 중인 스킬 경로. 디버깅 시 어느 스킬이 동작 중인지 파악할 수 있습니다.</span></div>
+            <div class="key-item"><span class="key-name">stages[N.M].done</span><span class="key-desc">해당 단계 완료 여부. true가 되면 다음 단계 진행이 허용됩니다.</span></div>
+            <div class="key-item"><span class="key-name">stages[N.M].validated</span><span class="key-desc">Notion 산출물이 있는 단계에서 pageid-capture Hook이 page_id를 캡처했을 때 true로 전환됩니다.</span></div>
+            <div class="key-item"><span class="key-name">stages[N.M].artifactPageId</span><span class="key-desc">해당 단계의 Notion 산출물 페이지 ID. pageid-capture Hook이 자동으로 채웁니다.</span></div>
+            <div class="key-item"><span class="key-name">stages[4.1].result</span><span class="key-desc">design-check(4.1) 결과값. 디자인 시스템 연결 여부를 code-write가 참조합니다.</span></div>
+            <div class="key-item"><span class="key-name">lastUpdated</span><span class="key-desc">state.json이 마지막으로 갱신된 ISO 8601 타임스탬프.</span></div>
+          </div>
+        </div>
+
+        <div class="subsubsection" id="active-task">
+          <div class="subsubsection-title">4.3.2 .claude/active-task</div>
+          <p>현재 <code style="font-family:'JetBrains Mono',monospace;font-size:12px;">/dev</code>가 작업 중인 일감번호 <strong>하나</strong>만 기록된 텍스트 파일입니다. Hook은 이 파일을 읽어 어떤 state.json을 참조할지 결정합니다.</p>
+          <div class="at-flow">
+            <div class="at-item">
+              <div class="at-timeline"><div class="at-dot"></div><div class="at-line"></div></div>
+              <div class="at-text">
+                <strong>/dev DCL-1351 실행</strong>
+                <span>active-task에 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">DCL-1351</code> 기록. 이후 Hook은 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">.dev-work/DCL-1351/state.json</code> 참조.</span>
+              </div>
+            </div>
+            <div class="at-item">
+              <div class="at-timeline"><div class="at-dot"></div><div class="at-line"></div></div>
+              <div class="at-text">
+                <strong>다른 일감 전환: /dev DCL-2000</strong>
+                <span>active-task가 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">DCL-2000</code>으로 교체. 기존 DCL-1351의 state.json은 그대로 보존됩니다.</span>
+              </div>
+            </div>
+            <div class="at-item">
+              <div class="at-timeline"><div class="at-dot"></div><div class="at-line"></div></div>
+              <div class="at-text">
+                <strong>원래 일감 복귀: /dev DCL-1351 재실행</strong>
+                <span>active-task가 다시 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">DCL-1351</code>로 전환. 중단된 시점의 상태에서 이어서 진행합니다.</span>
+              </div>
+            </div>
+            <div class="at-item">
+              <div class="at-timeline"><div class="at-dot"></div></div>
+              <div class="at-text">
+                <strong>active-task가 비어 있는 경우</strong>
+                <span>Hook이 단계 검증을 건너뛰고 모든 Notion 쓰기를 허용합니다.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('theme-icon').textContent = isDark ? '🌙' : '☀️';
+    document.getElementById('theme-label').textContent = isDark ? '다크' : '라이트';
+  }
+
+  const navLinks = document.querySelectorAll('.nav-item[data-target]');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector(`.nav-item[data-target="${entry.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-58px 0px -65% 0px', threshold: 0 });
+
+  document.querySelectorAll('[id]').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
