@@ -19,8 +19,8 @@ version: 0.1.0
 
 ## 입력
 
-1. **기획서 PDF** — 기능 요구사항 원본
-2. **공통 설계** — Notion에서 **skills/common/notion-writer** 스킬로 "기술 설계" 서브페이지를 읽는다
+1. **최종 기획서** — Notion MCP로 `state.finalSpec.pageId` 페이지를 읽어 로드
+2. **공통 설계** — Notion MCP로 `state.stages["3.3"].artifactPageId` 페이지를 읽어 로드
 3. **구현 코드** — 현재 프로젝트의 코드
 
 ---
@@ -87,5 +87,5 @@ Notion QA 보드에 저장하시겠습니까?
 
 ---
 
-> 이 스킬의 산출물은 `skills/common/validate` 규칙에 따라 검증됩니다.
-> 출력 포맷 변경 시 해당 규칙 블록을 동기화해야 합니다.
+> 이 스킬의 산출물은 `validate-guard.js`(PreToolUse Hook)가 자동 검증합니다.
+> 출력 포맷 변경 시 해당 훅의 5.1 규칙 블록을 동기화해야 합니다.

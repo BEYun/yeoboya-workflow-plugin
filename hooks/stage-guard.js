@@ -13,7 +13,6 @@ const NOTION_WRITE_TOOLS = new Set([
 
 // Page title → expected stage number (string keys match state.json)
 const TITLE_TO_STAGE = new Map([
-  ['기획서 검토', '2.1'],
   ['최종 기획서', '2.2'],
   ['UI 흐름도', '3.1'],
   ['데이터 흐름도', '3.2'],
